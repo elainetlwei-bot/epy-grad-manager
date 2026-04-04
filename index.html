@@ -857,9 +857,9 @@ function closeFacModal(){
 function editGTASnapshot(sem){
   const sd=gaData.find(d=>d.semester===sem);if(!sd)return;
   const current=sd.gtaSnapshot||[];
-  // Build a sorted list of all students who are or were GTAs
+  // Show ALL active students plus anyone already in the snapshot
   const allGTANames=[...new Set([
-    ...students.filter(s=>s.gtaEligible).map(s=>s.name),
+    ...students.filter(s=>!s.status||s.status==='active').map(s=>s.name),
     ...current
   ])].sort();
 
