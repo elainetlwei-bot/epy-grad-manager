@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPY Grad Student Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f7f6f2;--bg3:#f0efe9;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --accent:#185FA5;--accent-light:#E6F1FB;
+  --green:#3B6D11;--green-light:#EAF3DE;
+  --teal:#085041;--teal-light:#E1F5EE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --red:#791F1F;--red-light:#FCEBEB;
+  --purple:#3C3489;--purple-light:#EEEDFE;
+  --coral:#712B13;--coral-light:#FAECE7;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
+header{background:var(--bg);border-bottom:0.5px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:10}
+.app-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em}
+.app-title span{color:var(--accent)}
+.header-actions{display:flex;gap:8px;align-items:center}
+main{max-width:1200px;margin:0 auto;padding:1.5rem}
+.tab-bar{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius-lg);padding:4px;border:0.5px solid var(--border);margin-bottom:1.25rem;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--text2);transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--bg);color:var(--text);border:0.5px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:1.25rem}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:10px 14px}
+.stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font-size:24px;font-weight:600;color:var(--text);margin-top:2px}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+thead th{background:var(--bg2);font-weight:500;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;text-align:left;border-bottom:0.5px solid var(--border);white-space:nowrap}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--text)}
+thead th.sort-asc .sa::after{content:'▲'}
+thead th.sort-desc .sa::after{content:'▼'}
+thead th:not(.sort-asc):not(.sort-desc) .sa::after{content:'⇅';opacity:.4}
+.sa{font-size:10px;margin-left:3px}
+tbody tr{border-bottom:0.5px solid var(--border);cursor:pointer;transition:background .1s}
+tbody tr:hover{background:var(--bg2)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:500}
+.b-blue{background:var(--accent-light);color:#0C447C}
+.b-amber{background:var(--amber-light);color:var(--amber)}
+.b-teal{background:var(--teal-light);color:var(--teal)}
+.b-gray{background:var(--bg3);color:#444}
+.b-green{background:var(--green-light);color:var(--green)}
+.b-purple{background:var(--purple-light);color:var(--purple)}
+.b-coral{background:var(--coral-light);color:var(--coral)}
+.btn{padding:7px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg);color:var(--text);transition:all .15s}
+.btn:hover{background:var(--bg2)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#0C447C}
+.btn-sm{padding:4px 11px;font-size:12px}
+.btn-danger{background:var(--red-light);color:var(--red);border-color:#F09595}
+.btn-danger:hover{background:#F7C1C1}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.filters input{flex:1;min-width:160px}
+.filters input:focus,.filters select:focus{border-color:var(--accent)}
+.pag{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;color:var(--text2);border-top:0.5px solid var(--border)}
+.dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;display:inline-block}
+.dot.done{background:#1D9E75;border-color:#0F6E56}
+.progress-dots{display:flex;gap:4px;align-items:center}
+.load-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1.25rem}
+.load-card{background:var(--bg2);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid var(--border)}
+.load-name{font-size:13px;font-weight:500}
+.load-count{font-size:22px;font-weight:600}
+.sec-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:1rem}
+.rotation-box{background:var(--bg2);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.25rem;border:0.5px solid var(--border)}
+.rotation-box h3{font-size:14px;font-weight:600;margin-bottom:.75rem}
+.rotation-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:.5rem}
+.rotation-controls .fr{margin:0;flex:1;min-width:140px}
+.rotation-controls label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+.rotation-controls select,.rotation-controls input{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.suggestion-list{display:flex;flex-direction:column;gap:6px;margin-top:.75rem}
+.suggestion-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:9px 14px;gap:10px}
+.suggestion-item.rank1{border-color:var(--accent);border-width:1.5px}
+.sname{font-size:13px;font-weight:500;flex:1}
+.smeta{font-size:11px;color:var(--text2)}
+.faculty-needs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+.fac-card{background:var(--bg2);border-radius:var(--radius);padding:9px 12px;border:0.5px solid var(--border)}
+.fac-name{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.ga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:1rem}
+.ga-block{padding:10px 12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius)}
+.ga-block-label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.ga-block select{font-size:12px;width:100%;margin-bottom:8px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.ga-student-name{font-size:13px;font-weight:600;margin-bottom:8px}
+.sem-selector{display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+.sem-selector label{font-size:13px;color:var(--text2)}
+.sem-selector select{font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;min-width:160px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:var(--radius-lg);border:0.5px solid var(--border);padding:1.75rem;width:540px;max-width:100%}
+.modal h3{font-size:17px;font-weight:600;margin-bottom:1.25rem}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row{margin-bottom:10px}
+.form-row label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-weight:500}
+.form-row input,.form-row select,.form-row textarea{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.form-row input:focus,.form-row select:focus{border-color:var(--accent)}
+.form-actions{display:flex;gap:8px;justify-content:space-between;margin-top:1.5rem;align-items:center}
+.ms-section{margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)}
+.ms-section h4{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.ms-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.ms-row:last-child{border-bottom:none}
+.ms-row label{font-size:13px;flex:1;cursor:pointer;color:var(--text)}
+.ms-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75}
+.ms-note{font-size:11px;color:var(--text2);margin-bottom:8px;font-style:italic}
+.del-confirm{background:var(--red-light);border:0.5px solid #F09595;border-radius:var(--radius);padding:10px 14px;margin-top:1rem;display:none}
+.del-confirm p{font-size:13px;color:var(--red);margin-bottom:10px}
+.toast{position:fixed;bottom:20px;right:20px;background:#27500A;color:#EAF3DE;padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.gta-cell-wrap{position:relative;display:inline-block;width:100%}
+.gta-cell-input{width:100%;font-size:12px;padding:4px 8px;border:0.5px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);outline:none}
+.gta-cell-input:focus{border-color:var(--accent)}
+.gta-cell-input.has-value{background:var(--teal-light);color:var(--teal);font-weight:500;border-color:#5DCAA5}
+.gta-cell-input.is-empty{color:var(--text3)}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);z-index:50;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.12)}
+.autocomplete-item{padding:7px 12px;font-size:12px;cursor:pointer;color:var(--text)}
+.autocomplete-item:hover,.autocomplete-item.ac-active{background:var(--bg2)}
+.import-note{font-size:11px;color:var(--text2);margin-top:4px;font-style:italic}
+@media(max-width:600px){.form-2col{grid-template-columns:1fr}.stat-row{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-title">EPY <span>Grad Student Manager</span></div>
+  <div class="header-actions">
+    <label class="btn btn-sm" style="cursor:pointer" title="Import from Excel backup">
+      Import ↑
+      <input type="file" accept=".xlsx" style="display:none" onchange="importXLSX(this)">
+    </label>
+    <button class="btn btn-sm" onclick="exportXLSX()">Export ↓</button>
+    <button class="btn btn-sm btn-primary" onclick="openAdd()">+ Add student</button>
+  </div>
+</header>
+
+<main>
+  <div class="tab-bar">
+    <button class="tab active" onclick="setView('roster')">Roster</button>
+    <button class="tab" onclick="setView('milestones')">Milestones</button>
+    <button class="tab" onclick="setView('rotation')">GTA Rotation</button>
+    <button class="tab" onclick="setView('ga')">GA Assignments</button>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-label">Active</div><div class="stat-value" id="st-active">0</div></div>
+    <div class="stat"><div class="stat-label">Ph.D.</div><div class="stat-value" id="st-phd">0</div></div>
+    <div class="stat"><div class="stat-label">M.S.</div><div class="stat-value" id="st-ms">0</div></div>
+    <div class="stat"><div class="stat-label">GTAs</div><div class="stat-value" id="st-gta">0</div></div>
+    <div class="stat"><div class="stat-label">Ready to teach</div><div class="stat-value" id="st-ready">0</div></div>
+    <div class="stat"><div class="stat-label">Graduating ≤ 1yr</div><div class="stat-value" id="st-soon">0</div></div>
+  </div>
+
+  <!-- ROSTER -->
+  <div id="view-roster">
+    <div class="sec-label" style="margin-top:0">Advising load</div>
+    <div class="load-grid" id="load-grid"></div>
+    <div class="filters">
+      <input type="text" id="f-search" placeholder="Search name or advisor..." oninput="page=0;render()">
+      <select id="f-prog" onchange="page=0;render()"><option value="">All programs</option><option>Ph.D.</option><option>M.S.</option></select>
+      <select id="f-status" onchange="page=0;render()"><option value="">All statuses</option><option value="active">Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select>
+      <select id="f-adv" onchange="page=0;render()"><option value="">All advisors</option></select>
+      <select id="f-gta" onchange="page=0;render()"><option value="">GTA: all</option><option value="yes">GTA</option><option value="no">Not GTA</option></select>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th class="sortable" style="width:21%" onclick="sortBy('name')">Student<span class="sa"></span></th>
+            <th class="sortable" style="width:8%" onclick="sortBy('program')">Program<span class="sa"></span></th>
+            <th class="sortable" style="width:12%" onclick="sortBy('catalogYear')">Catalog yr<span class="sa"></span></th>
+            <th class="sortable" style="width:11%" onclick="sortBy('advisor')">Advisor<span class="sa"></span></th>
+            <th class="sortable" style="width:12%" onclick="sortBy('gradTerm')">Grad term<span class="sa"></span></th>
+            <th class="sortable" style="width:7%" onclick="sortBy('gtaEligible')">GTA<span class="sa"></span></th>
+            <th class="sortable" style="width:7%" onclick="sortBy('hrs18')">18 hrs<span class="sa"></span></th>
+            <th class="sortable" style="width:7%" onclick="sortBy('_taught')">Taught<span class="sa"></span></th>
+            <th style="width:8%">Progress</th>
+            <th class="sortable" style="width:7%" onclick="sortBy('status')">Status<span class="sa"></span></th>
+          </tr></thead>
+          <tbody id="roster-body"></tbody>
+        </table>
+      </div>
+      <div class="pag">
+        <button class="btn btn-sm" onclick="pg(-1)">‹ Prev</button>
+        <span id="pag-info"></span>
+        <button class="btn btn-sm" onclick="pg(1)">Next ›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MILESTONES -->
+  <div id="view-milestones" style="display:none">
+    <div class="filters">
+      <input type="text" id="m-search" placeholder="Search name..." oninput="renderMilestones()">
+      <select id="m-prog" onchange="renderMilestones()"><option value="">All programs</option><option>Ph.D.</option><option>M.S.</option></select>
+      <select id="m-adv" onchange="renderMilestones()"><option value="">All advisors</option></select>
+    </div>
+    <div class="card"><div style="overflow-x:auto"><table style="table-layout:auto"><thead id="ms-head"></thead><tbody id="ms-body"></tbody></table></div></div>
+  </div>
+
+  <!-- GTA ROTATION -->
+  <div id="view-rotation" style="display:none">
+    <div class="rotation-box">
+      <h3>Suggest next GTA assignment</h3>
+      <div class="rotation-controls">
+        <div class="fr"><label>Semester</label><select id="rot-sem"><option value="">— select —</option></select></div>
+        <div class="fr"><label>Course</label><select id="rot-course"><option value="">— select —</option></select></div>
+        <button class="btn btn-primary" onclick="runSuggestion()" style="align-self:flex-end">Suggest</button>
+      </div>
+      <div id="suggestion-output"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+      <div style="font-size:13px;color:var(--text2)">GTA teaching history — type to search a student name in each cell</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="addCoursePrompt()">+ Course</button>
+        <button class="btn btn-sm" onclick="addSemesterPrompt()">+ Semester</button>
+      </div>
+    </div>
+    <div class="card"><div style="overflow-x:auto"><table style="table-layout:auto"><thead id="gta-head"></thead><tbody id="gta-body"></tbody></table></div></div>
+  </div>
+
+  <!-- GA ASSIGNMENTS -->
+  <div id="view-ga" style="display:none">
+    <div class="sem-selector">
+      <label>Semester:</label>
+      <select id="ga-sem-sel" onchange="renderGA()"><option value="">— select —</option></select>
+      <button class="btn btn-sm btn-primary" onclick="addGASemesterPrompt()">+ New semester</button>
+    </div>
+    <div id="ga-content"></div>
+  </div>
+</main>
+
+<!-- STUDENT MODAL -->
+<div class="modal-overlay" id="modal-wrap">
+  <div class="modal">
+    <h3 id="modal-title">Add student</h3>
+    <div class="form-2col">
+      <div class="form-row"><label>Full name</label><input id="f-name" type="text"></div>
+      <div class="form-row"><label>Program</label><select id="f-mprog" onchange="buildMsForm(this.value,{})"><option>Ph.D.</option><option>M.S.</option></select></div>
+      <div class="form-row"><label>Catalog year</label><input id="f-cat" type="text" placeholder="e.g. Fall 2025"></div>
+      <div class="form-row"><label>Advisor</label><input id="f-madv" type="text" list="adv-list"><datalist id="adv-list"></datalist></div>
+      <div class="form-row"><label>Tentative grad term</label><input id="f-grad" type="text" placeholder="e.g. Spring 2027"></div>
+      <div class="form-row"><label>Status</label><select id="f-mstat"><option value="active">Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select></div>
+    </div>
+    <div class="ms-section">
+      <h4>GTA qualifications</h4>
+      <div class="ms-row"><input type="checkbox" id="f-gta" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="f-gta">GTA (employment — has assistantship)</label></div>
+      <div class="ms-row"><input type="checkbox" id="f-hrs" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="f-hrs">18 credit hours in EPY completed</label></div>
+      <div class="ms-row" style="border-bottom:none;padding-top:4px"><span style="font-size:11px;color:var(--text2);font-style:italic">Times taught is calculated automatically from GTA history.</span></div>
+    </div>
+    <div class="ms-section" id="ms-form"></div>
+    <div class="del-confirm" id="del-confirm">
+      <p>Remove this student permanently from the roster?</p>
+      <div style="display:flex;gap:8px"><button class="btn btn-danger" onclick="confirmDelete()">Yes, remove</button><button class="btn" onclick="cancelDelete()">Cancel</button></div>
+    </div>
+    <div class="form-actions">
+      <div><button class="btn btn-sm" id="del-btn" style="display:none;color:var(--red);border-color:#F09595" onclick="promptDelete()">Delete</button></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="save-btn" onclick="saveModal()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='epy_gsm_standalone_v1';
+const PER=15;
+let page=0,editIdx=null,currentView='roster',sortCol='name',sortDir=1;
+
+const MS_PHD=['Preliminary Exam','Dissertation Proposal','Dissertation Defense'];
+const MS_MS=['Comprehensive Exam','Thesis Defense'];
+const FIXED_FAC=['Bell','Abernathy','Gainer','Parra Martinez'];
+const VAR_FAC=['Karami','Wei','Gallo','Garemani'];
+const ALL_FAC=[...FIXED_FAC,...VAR_FAC];
+
+const SEED_STUDENTS=[
+  {name:'Kelly Davis',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Seger McGuire',program:'Ph.D.',catalogYear:'Fall 2022',advisor:'Karami',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Grace Austin',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Karami',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Sam Stewart',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Garemani',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Benjamin Ansah',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Sayed In',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Nancy Florida',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2029',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Leila',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Corinne Kennedy',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Akshaya Godavarthi',program:'M.S.',catalogYear:'Fall 2024',advisor:'Karami',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Avery Tate',program:'Ph.D.',catalogYear:'Fall 2025',advisor:'Gallo',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Emma Logan',program:'M.S.',catalogYear:'Fall 2025',advisor:'Karami',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Hallie House',program:'M.S.',catalogYear:'Fall 2025',advisor:'Garemani',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Colby Ginn',program:'M.S.',catalogYear:'Fall 2025',advisor:'Karami',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Autumn',program:'Ph.D.',catalogYear:'Spring 2026',advisor:'Garemani',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Mary Cooper Bearden',program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:"Ken'Zyria Williams",program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Carson McTaggart',program:'M.S.',catalogYear:'Fall 2025',advisor:'Wei',gradTerm:'Part-Time',gtaEligible:false,hrs18:false,status:'withdrew',milestones:{}},
+  {name:'Alzukari, Rawan',program:'Ph.D.',catalogYear:'Fall 2019',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{'Preliminary Exam':true,'Dissertation Proposal':true,'Dissertation Defense':true}},
+  {name:'Campbell, Kethlin',program:'M.S.',catalogYear:'Fall 2022',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{'Thesis Defense':true}},
+  {name:'Pierce, Serenity',program:'M.S.',catalogYear:'',advisor:'Wei',gradTerm:'Spring 2023',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Edward Ansah',program:'M.S.',catalogYear:'Spring 2023',advisor:'Wei',gradTerm:'Fall 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Claire Bland',program:'M.S.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Fall 2024',gtaEligible:false,hrs18:false,status:'graduated',milestones:{}},
+  {name:'Sandys Ayuumah',program:'M.S.',catalogYear:'Fall 2023',advisor:'Karami',gradTerm:'Spring 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Heather Omane',program:'M.S.',catalogYear:'Fall 2023',advisor:'Wei',gradTerm:'Spring 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Amber Crenshaw',program:'Ph.D.',catalogYear:'Fall 2022',advisor:'Wei',gradTerm:'Fall 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Allison Johnson',program:'M.S.',catalogYear:'Fall 2024',advisor:'Wei',gradTerm:'Fall 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+];
+const SEED_COURSES=['3063','3503','3513','3543','4313','4513','4683','4683 Online'];
+const SEED_GTA=[
+  {semester:'Spring 24',assignments:{'3063':'Sam Stewart','3543':'Claire Bland','3503':'Amber Crenshaw'}},
+  {semester:'Fall 24',assignments:{'3513':'Seger McGuire','3543':'Amber Crenshaw'}},
+  {semester:'Spring 25',assignments:{'4313':'Amber Crenshaw'}},
+  {semester:'Fall 25',assignments:{'3513':'Benjamin Ansah','3543':'Grace Austin','4513':'Amber Crenshaw','4683':'Amber Crenshaw'}},
+  {semester:'Spring 26',assignments:{'3063':'Sayed In','3513':'Nancy Florida','4513':'Leila'}},
+  {semester:'Fall 26',assignments:{}},
+];
+const SEED_GA=[
+  {semester:'Spring 26',blocks:{
+    'Sayed In':['Teaching','Bell'],
+    'Nancy Florida':['Teaching','Garemani'],
+    'Leila':['Teaching','Garemani'],
+    'Akshaya Godavarthi':['Teaching','Karami'],
+    'Seger McGuire':['Gallo','Gallo'],
+    'Grace Austin':['Karami','Abernathy'],
+    'Benjamin Ansah':['Gallo','Gainer'],
+    'Sam Stewart':['Gallo','Parra Martinez'],
+  }},
+];
+
+let students=[],gtaHistory=[],gtaCourses=[],gaData=[];
+
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify({students,gtaHistory,gtaCourses,gaData}));toast('Saved');}
+  catch(e){toast('Save error — storage may be full');}
+}
+function load(){
+  try{
+    const r=localStorage.getItem(KEY);
+    if(r){const p=JSON.parse(r);if(p&&p.students&&p.students.length){students=p.students;gtaHistory=p.gtaHistory||JSON.parse(JSON.stringify(SEED_GTA));gtaCourses=p.gtaCourses||JSON.parse(JSON.stringify(SEED_COURSES));gaData=p.gaData||JSON.parse(JSON.stringify(SEED_GA));renderAll();return;}}
+  }catch(e){}
+  students=JSON.parse(JSON.stringify(SEED_STUDENTS));gtaHistory=JSON.parse(JSON.stringify(SEED_GTA));gtaCourses=JSON.parse(JSON.stringify(SEED_COURSES));gaData=JSON.parse(JSON.stringify(SEED_GA));renderAll();
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',2400);}
+
+function activeGTAs(){return students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible);}
+function activeStudents(){return students.filter(s=>!s.status||s.status==='active');}
+function advisors(){return[...new Set(students.map(s=>s.advisor).filter(Boolean))].sort();}
+function isReady(s){return s.gtaEligible&&s.hrs18&&(!s.status||s.status==='active');}
+function taughtFor(s){
+  const nm=s.name.trim().toLowerCase();let c=0;
+  gtaHistory.forEach(r=>Object.values(r.assignments||{}).forEach(v=>{if(v&&v.trim().toLowerCase()===nm)c++;}));
+  return c;
+}
+function termToNum(t){if(!t)return 9999;const m=t.match(/(Spring|Summer|Fall|Winter)\s*(\d{4})/i);if(!m)return 9999;return parseInt(m[2])+({'spring':0,'summer':.4,'fall':.7,'winter':.9}[m[1].toLowerCase()]||0);}
+function nowNum(){const d=new Date();return d.getFullYear()+d.getMonth()/12;}
+
+function renderStats(){
+  const act=activeStudents();
+  document.getElementById('st-active').textContent=act.length;
+  document.getElementById('st-phd').textContent=act.filter(s=>s.program==='Ph.D.').length;
+  document.getElementById('st-ms').textContent=act.filter(s=>s.program==='M.S.').length;
+  document.getElementById('st-gta').textContent=act.filter(s=>s.gtaEligible).length;
+  document.getElementById('st-ready').textContent=act.filter(isReady).length;
+  const now=nowNum();
+  document.getElementById('st-soon').textContent=act.filter(s=>{const y=termToNum(s.gradTerm);return y<9999&&y-now<=1&&y>=now;}).length;
+}
+function renderAdvisingLoad(){
+  const load={};activeStudents().forEach(s=>{if(s.advisor)load[s.advisor]=(load[s.advisor]||0)+1;});
+  document.getElementById('load-grid').innerHTML=Object.entries(load).sort((a,b)=>b[1]-a[1]).map(([adv,cnt])=>`
+    <div class="load-card"><div class="load-name">${adv}</div>
+    <div style="display:flex;align-items:baseline;gap:4px"><span class="load-count">${cnt}</span><span style="font-size:11px;color:var(--text2)">active</span></div></div>`).join('');
+}
+function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}page=0;render();}
+function getSortVal(s,col){
+  if(col==='_taught')return taughtFor(s);
+  if(col==='gradTerm'||col==='catalogYear')return termToNum(s[col]);
+  if(col==='gtaEligible'||col==='hrs18')return s[col]?0:1;
+  return(s[col]||'').toString().toLowerCase();
+}
+function updateSortHdrs(){
+  document.querySelectorAll('thead th.sortable').forEach(th=>{
+    th.classList.remove('sort-asc','sort-desc');
+    const m=th.getAttribute('onclick').match(/sortBy\('(.+?)'\)/);
+    if(m&&m[1]===sortCol)th.classList.add(sortDir===1?'sort-asc':'sort-desc');
+  });
+}
+function filtered(){
+  const q=(document.getElementById('f-search')||{value:''}).value.toLowerCase();
+  const prog=(document.getElementById('f-prog')||{value:''}).value;
+  const stat=(document.getElementById('f-status')||{value:''}).value;
+  const adv=(document.getElementById('f-adv')||{value:''}).value;
+  const gta=(document.getElementById('f-gta')||{value:''}).value;
+  return students.filter(s=>{
+    if(q&&!s.name.toLowerCase().includes(q)&&!(s.advisor||'').toLowerCase().includes(q))return false;
+    if(prog&&s.program!==prog)return false;
+    if(stat&&s.status!==stat)return false;
+    if(adv&&s.advisor!==adv)return false;
+    if(gta==='yes'&&!s.gtaEligible)return false;
+    if(gta==='no'&&s.gtaEligible)return false;
+    return true;
+  }).sort((a,b)=>{const av=getSortVal(a,sortCol),bv=getSortVal(b,sortCol);return av<bv?-sortDir:av>bv?sortDir:0;});
+}
+function dotsFor(s){return(s.program==='Ph.D.'?MS_PHD:MS_MS).map(m=>`<span class="dot${(s.milestones||{})[m]?' done':''}" title="${m}"></span>`).join('');}
+function statusBadge(s){if(!s.status||s.status==='active')return'<span class="badge b-teal">active</span>';if(s.status==='graduated')return'<span class="badge b-blue">graduated</span>';return'<span class="badge b-gray">withdrew</span>';}
+function ck(v){return v?'<span class="badge b-green">Yes</span>':'<span style="color:var(--text3);font-size:12px">—</span>';}
+
+function render(){
+  renderStats();renderAdvisingLoad();
+  const advSel=document.getElementById('f-adv');const cur=advSel.value;
+  advSel.innerHTML='<option value="">All advisors</option>'+advisors().map(a=>`<option${a===cur?' selected':''}>${a}</option>`).join('');
+  updateSortHdrs();
+  const all=filtered();const pages=Math.max(1,Math.ceil(all.length/PER));
+  if(page>=pages)page=pages-1;
+  const slice=all.slice(page*PER,(page+1)*PER);
+  document.getElementById('pag-info').textContent=`${all.length} students · page ${page+1} of ${pages}`;
+  document.getElementById('roster-body').innerHTML=slice.map(s=>{
+    const i=students.indexOf(s);const t=taughtFor(s);
+    const rdot=isReady(s)?'<span class="dot done" style="width:8px;height:8px;margin-left:4px;vertical-align:middle" title="Ready to teach"></span>':'';
+    return`<tr onclick="openEdit(${i})">
+      <td title="${s.name}">${s.name}${rdot}</td>
+      <td>${s.program==='Ph.D.'?'<span class="badge b-blue">Ph.D.</span>':'<span class="badge b-amber">M.S.</span>'}</td>
+      <td>${s.catalogYear||'—'}</td><td>${s.advisor||'—'}</td><td>${s.gradTerm||'—'}</td>
+      <td>${s.gtaEligible?'<span class="badge b-teal">GTA</span>':'<span style="color:var(--text3);font-size:12px">—</span>'}</td>
+      <td>${ck(s.hrs18)}</td><td style="text-align:center;font-weight:600">${t}</td>
+      <td><div class="progress-dots">${dotsFor(s)}</div></td>
+      <td>${statusBadge(s)}</td></tr>`;
+  }).join('');
+}
+function pg(d){const all=filtered();const pages=Math.max(1,Math.ceil(all.length/PER));page=Math.max(0,Math.min(pages-1,page+d));render();}
+
+function renderMilestones(){
+  const q=(document.getElementById('m-search')||{value:''}).value.toLowerCase();
+  const prog=(document.getElementById('m-prog')||{value:''}).value;
+  const adv=(document.getElementById('m-adv')||{value:''}).value;
+  const advSel=document.getElementById('m-adv');
+  advSel.innerHTML='<option value="">All advisors</option>'+advisors().map(a=>`<option>${a}</option>`).join('');
+  const act=students.filter(s=>{
+    if(s.status&&s.status!=='active')return false;
+    if(q&&!s.name.toLowerCase().includes(q))return false;
+    if(prog&&s.program!==prog)return false;
+    if(adv&&s.advisor!==adv)return false;
+    return true;
+  });
+  const shade='background:var(--bg2)';
+  document.getElementById('ms-head').innerHTML=`<tr>
+    <th style="min-width:160px">Student</th><th style="min-width:70px">Program</th><th style="min-width:100px">Advisor</th>
+    <th style="min-width:120px;text-align:center;font-size:10px">Preliminary Exam</th>
+    <th style="min-width:130px;text-align:center;font-size:10px">Dissertation Proposal</th>
+    <th style="min-width:130px;text-align:center;font-size:10px">Dissertation Defense</th>
+    <th style="min-width:6px;background:var(--border);padding:0"></th>
+    <th style="min-width:120px;text-align:center;font-size:10px">Comprehensive Exam</th>
+    <th style="min-width:110px;text-align:center;font-size:10px">Thesis Defense</th></tr>`;
+  function mrow(s){
+    const i=students.indexOf(s);const isPHD=s.program==='Ph.D.';
+    let r=`<tr><td title="${s.name}">${s.name}</td><td>${isPHD?'<span class="badge b-blue">Ph.D.</span>':'<span class="badge b-amber">M.S.</span>'}</td><td>${s.advisor||'—'}</td>`;
+    MS_PHD.forEach(m=>{r+=isPHD?`<td style="text-align:center"><input type="checkbox" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer" ${(s.milestones||{})[m]?'checked':''} onchange="toggleMS(${i},'${m}',this.checked)"></td>`:`<td style="${shade}"></td>`;});
+    r+=`<td style="background:var(--border);padding:0"></td>`;
+    MS_MS.forEach(m=>{r+=!isPHD?`<td style="text-align:center"><input type="checkbox" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer" ${(s.milestones||{})[m]?'checked':''} onchange="toggleMS(${i},'${m}',this.checked)"></td>`:`<td style="${shade}"></td>`;});
+    return r+'</tr>';
+  }
+  document.getElementById('ms-body').innerHTML=[...act.filter(s=>s.program==='Ph.D.'),...act.filter(s=>s.program==='M.S.')].map(mrow).join('');
+}
+function toggleMS(i,m,v){if(!students[i].milestones)students[i].milestones={};students[i].milestones[m]=v;save();}
+
+function makeACInput(ri,course,val){
+  const uid=`ac-${ri}-${course.replace(/[\s\/]/g,'-')}`;
+  const empty=!val;
+  return`<div class="gta-cell-wrap" id="wrap-${uid}">
+    <input type="text" class="gta-cell-input ${empty?'is-empty':'has-value'}" id="${uid}" value="${empty?'--':val}" autocomplete="off"
+      onfocus="acFocus(this,'${uid}')"
+      oninput="acInput(this,'${uid}',${ri},'${course.replace(/'/g,"\\'")}')"
+      onblur="acBlur(this,'${uid}',${ri},'${course.replace(/'/g,"\\'")}')"
+      onkeydown="acKey(event,'${uid}',${ri},'${course.replace(/'/g,"\\'")}')">
+    <div class="autocomplete-list" id="list-${uid}" style="display:none"></div>
+  </div>`;
+}
+function acFocus(inp,uid){if(inp.value==='--')inp.value='';inp.classList.remove('is-empty');}
+function acInput(inp,uid,ri,course){
+  const q=inp.value.trim().toLowerCase();
+  const list=document.getElementById('list-'+uid);
+  if(!q){list.style.display='none';return;}
+  const matches=students.map(s=>s.name).filter(n=>n.toLowerCase().includes(q)).slice(0,8);
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML=matches.map(n=>`<div class="autocomplete-item" data-name="${n}" onmousedown="selectAC(event,'${uid}',${ri},'${course.replace(/'/g,"\\'")}','${n.replace(/'/g,"\\'")}')">${n}</div>`).join('');
+  list.style.display='block';
+}
+function acBlur(inp,uid,ri,course){
+  setTimeout(()=>{
+    const list=document.getElementById('list-'+uid);if(list)list.style.display='none';
+    const val=inp.value.trim();
+    const matched=students.find(s=>s.name.toLowerCase()===val.toLowerCase());
+    if(!val||val==='--'||!matched){inp.value='--';inp.classList.add('is-empty');inp.classList.remove('has-value');gtaHistory[ri].assignments[course]='';}
+    else{inp.value=matched.name;inp.classList.add('has-value');inp.classList.remove('is-empty');gtaHistory[ri].assignments[course]=matched.name;}
+    save();render();
+  },160);
+}
+function acKey(e,uid,ri,course){
+  const list=document.getElementById('list-'+uid);const items=list?[...list.querySelectorAll('.autocomplete-item')]:[];
+  const ai=items.findIndex(el=>el.classList.contains('ac-active'));
+  if(e.key==='ArrowDown'){e.preventDefault();const nx=Math.min(ai+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===nx));}
+  else if(e.key==='ArrowUp'){e.preventDefault();const pv=Math.max(ai-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===pv));}
+  else if(e.key==='Enter'&&ai>=0){e.preventDefault();selectAC(null,uid,ri,course,items[ai].dataset.name);}
+  else if(e.key==='Escape'&&list)list.style.display='none';
+}
+function selectAC(e,uid,ri,course,name){
+  if(e)e.preventDefault();
+  const inp=document.getElementById(uid);if(inp){inp.value=name;inp.classList.add('has-value');inp.classList.remove('is-empty');}
+  const list=document.getElementById('list-'+uid);if(list)list.style.display='none';
+  gtaHistory[ri].assignments[course]=name;save();render();
+}
+
+function renderGTAHistory(){
+  const semSel=document.getElementById('rot-sem');const curSem=semSel.value;
+  semSel.innerHTML='<option value="">— select —</option>'+gtaHistory.map(r=>`<option${r.semester===curSem?' selected':''}>${r.semester}</option>`).join('');
+  document.getElementById('rot-course').innerHTML='<option value="">— select —</option>'+gtaCourses.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('gta-head').innerHTML='<tr><th style="min-width:90px">Semester</th>'+gtaCourses.map(c=>`<th style="min-width:130px;text-align:center">${c}</th>`).join('')+'</tr>';
+  document.getElementById('gta-body').innerHTML=gtaHistory.map((row,ri)=>{
+    let tr=`<tr><td style="font-weight:600;white-space:nowrap">${row.semester}</td>`;
+    gtaCourses.forEach(c=>{tr+=`<td style="padding:4px 6px">${makeACInput(ri,c,row.assignments[c]||'')}</td>`;});
+    return tr+'</tr>';
+  }).join('');
+}
+function addSemesterPrompt(){
+  const s=prompt('Semester name (e.g. Fall 2027):');if(!s)return;
+  gtaHistory.push({semester:s.trim(),assignments:{}});save();renderGTAHistory();populateGASemSel();
+}
+function addCoursePrompt(){
+  const n=prompt('Course number/name (e.g. 4033):');if(!n)return;
+  const t=n.trim();if(!gtaCourses.includes(t)){gtaCourses.push(t);save();renderGTAHistory();}
+}
+function runSuggestion(){
+  const sem=document.getElementById('rot-sem').value;
+  const course=document.getElementById('rot-course').value;
+  const out=document.getElementById('suggestion-output');
+  const pool=students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible&&s.hrs18);
+  if(!pool.length){out.innerHTML='<p style="font-size:13px;color:var(--text2)">No students meet GTA + 18hr criteria.</p>';return;}
+  const wc=pool.map(s=>({s,t:taughtFor(s)})).sort((a,b)=>a.t-b.t);
+  const minT=wc[0].t;const candidates=wc.slice(0,6);
+  let html=`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${sem||course?`For <strong>${course||'?'}</strong> · <strong>${sem||'?'}</strong> — `:''}Ranked by fewest times taught. Top pick has taught ${minT}×.</div><div class="suggestion-list">`;
+  candidates.forEach(({s,t},idx)=>{
+    const top=idx===0;
+    html+=`<div class="suggestion-item${top?' rank1':''}">
+      <div><div class="sname">${s.name}${top?' <span class="badge b-purple" style="font-size:10px">Top pick</span>':''}</div>
+      <div class="smeta">Taught ${t}× · Advisor: ${s.advisor||'—'} · ${s.program} · ${s.gradTerm||'?'}</div></div>
+      <button class="btn btn-sm btn-primary" onclick="confirmAssign('${s.name.replace(/'/g,"\\'")}','${(sem||'').replace(/'/g,"\\'")}','${(course||'').replace(/'/g,"\\'")}')">Assign</button></div>`;
+  });
+  out.innerHTML=html+'</div>';
+}
+function confirmAssign(name,sem,course){
+  if(!sem||!course){toast('Select a semester and course first');return;}
+  let row=gtaHistory.find(r=>r.semester===sem);
+  if(!row){row={semester:sem,assignments:{}};gtaHistory.push(row);}
+  row.assignments[course]=name;save();renderGTAHistory();render();
+  const nc=taughtFor(students.find(s=>s.name===name)||{name:'',milestones:{}});
+  document.getElementById('suggestion-output').innerHTML=`<div style="background:var(--green-light);border:0.5px solid #97C459;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--green)"><strong>${name}</strong> assigned to ${course} (${sem}). Taught count: ${nc}×.</div>`;
+}
+
+function populateGASemSel(){
+  const sel=document.getElementById('ga-sem-sel');const cur=sel.value;
+  const sems=[...new Set([...gtaHistory.map(r=>r.semester),...gaData.map(d=>d.semester)])];
+  sel.innerHTML='<option value="">— select —</option>'+sems.map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
+}
+function renderGA(){
+  const sem=document.getElementById('ga-sem-sel').value;
+  const content=document.getElementById('ga-content');
+  if(!sem){content.innerHTML='<div style="font-size:13px;color:var(--text2)">Select a semester to view or edit assignments.</div>';return;}
+  let semData=gaData.find(d=>d.semester===sem);
+  if(!semData){semData={semester:sem,blocks:{}};gaData.push(semData);}
+  const gtas=activeGTAs();
+  function isFacFilled(fac){return Object.values(semData.blocks).some(bl=>bl&&(bl[0]===fac||bl[1]===fac));}
+  function facCnt(fac){return Object.values(semData.blocks).reduce((a,bl)=>a+(bl?[bl[0],bl[1]].filter(x=>x===fac).length:0),0);}
+  const bOpts=(cur)=>{
+    let o=`<option value=""${!cur?' selected':''}>— unassigned —</option><option${cur==='Teaching'?' selected':''}>Teaching</option>`;
+    ALL_FAC.forEach(f=>o+=`<option${cur===f?' selected':''}>${f}</option>`);return o;
+  };
+  const isTchg=name=>gtaHistory.some(r=>r.semester===sem&&Object.values(r.assignments).includes(name));
+  content.innerHTML=`
+    <div class="sec-label" style="margin-top:0">Fixed faculty (each needs exactly 1 block)</div>
+    <div class="faculty-needs">${FIXED_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div>${isFacFilled(f)?'<span class="badge b-green">Covered</span>':'<span class="badge b-coral">Needs 10hr</span>'}</div>`).join('')}</div>
+    <div class="sec-label">Variable faculty</div>
+    <div class="faculty-needs">${VAR_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div><span style="font-size:14px;font-weight:600">${facCnt(f)}</span> <span style="font-size:11px;color:var(--text2)">block${facCnt(f)===1?'':'s'}</span></div>`).join('')}</div>
+    <div class="sec-label">GTA blocks — 2 × 10hr each</div>
+    <div class="ga-grid">${gtas.length?gtas.map(s=>{
+      const bl=semData.blocks[s.name]||['',''];const tchg=isTchg(s.name);const sk=s.name.replace(/'/g,"\\'");
+      return`<div class="ga-block">
+        <div class="ga-student-name">${s.name}${tchg?'<span class="badge b-purple" style="font-size:10px;margin-left:6px">Teaching</span>':''}</div>
+        <div class="ga-block-label">Block 1 (10hr)</div>
+        <select onchange="updateGABlock('${sem.replace(/'/g,"\\'")}','${sk}',0,this.value)">${bOpts(bl[0])}</select>
+        <div class="ga-block-label">Block 2 (10hr)</div>
+        <select onchange="updateGABlock('${sem.replace(/'/g,"\\'")}','${sk}',1,this.value)">${bOpts(bl[1])}</select>
+      </div>`;
+    }).join(''):'<div style="font-size:13px;color:var(--text2)">No active GTAs found.</div>'}</div>`;
+}
+function updateGABlock(sem,name,idx,val){
+  let sd=gaData.find(d=>d.semester===sem);if(!sd){sd={semester:sem,blocks:{}};gaData.push(sd);}
+  if(!sd.blocks[name])sd.blocks[name]=['',''];sd.blocks[name][idx]=val;save();renderGA();
+}
+function addGASemesterPrompt(){
+  const s=prompt('Semester (e.g. Fall 2027):');if(!s)return;const t=s.trim();
+  if(!gaData.find(d=>d.semester===t))gaData.push({semester:t,blocks:{}});
+  save();populateGASemSel();document.getElementById('ga-sem-sel').value=t;renderGA();
+}
+
+function renderAll(){
+  render();
+  if(currentView==='milestones')renderMilestones();
+  if(currentView==='rotation')renderGTAHistory();
+  if(currentView==='ga'){populateGASemSel();renderGA();}
+}
+function setView(v){
+  currentView=v;
+  ['roster','milestones','rotation','ga'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['roster','milestones','rotation','ga'][i]===v));
+  if(v==='milestones')renderMilestones();
+  else if(v==='rotation')renderGTAHistory();
+  else if(v==='ga'){populateGASemSel();renderGA();}
+  else render();
+}
+
+function buildMsForm(prog,existing){
+  const isPHD=prog==='Ph.D.';const ms=isPHD?MS_PHD:MS_MS;
+  let h=`<h4>${prog} milestones</h4>`;
+  if(!isPHD)h+=`<p class="ms-note">M.S. students complete either a Comprehensive Exam or a Thesis Defense.</p>`;
+  ms.forEach(m=>{const id='ms-'+m.replace(/\s+/g,'-');h+=`<div class="ms-row"><input type="checkbox" id="${id}" ${(existing||{})[m]?'checked':''} style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="${id}">${m}</label></div>`;});
+  document.getElementById('ms-form').innerHTML=h;
+}
+function openAdd(){
+  editIdx=null;document.getElementById('modal-title').textContent='Add student';
+  ['f-name','f-cat','f-madv','f-grad'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-mprog').value='Ph.D.';document.getElementById('f-mstat').value='active';
+  document.getElementById('f-gta').checked=false;document.getElementById('f-hrs').checked=false;
+  document.getElementById('del-btn').style.display='none';document.getElementById('del-confirm').style.display='none';
+  document.getElementById('save-btn').style.display='inline-block';
+  document.getElementById('adv-list').innerHTML=advisors().map(a=>`<option>${a}</option>`).join('');
+  buildMsForm('Ph.D.',{});document.getElementById('modal-wrap').classList.add('open');
+}
+function openEdit(i){
+  editIdx=i;const s=students[i];document.getElementById('modal-title').textContent='Edit student';
+  document.getElementById('f-name').value=s.name||'';document.getElementById('f-mprog').value=s.program||'Ph.D.';
+  document.getElementById('f-cat').value=s.catalogYear||'';document.getElementById('f-madv').value=s.advisor||'';
+  document.getElementById('f-grad').value=s.gradTerm||'';document.getElementById('f-mstat').value=s.status||'active';
+  document.getElementById('f-gta').checked=!!s.gtaEligible;document.getElementById('f-hrs').checked=!!s.hrs18;
+  document.getElementById('del-btn').style.display='inline-block';document.getElementById('del-confirm').style.display='none';
+  document.getElementById('save-btn').style.display='inline-block';
+  document.getElementById('adv-list').innerHTML=advisors().map(a=>`<option>${a}</option>`).join('');
+  buildMsForm(s.program,s.milestones||{});document.getElementById('modal-wrap').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-wrap').classList.remove('open');editIdx=null;}
+function promptDelete(){document.getElementById('del-confirm').style.display='block';document.getElementById('save-btn').style.display='none';document.getElementById('del-btn').style.display='none';}
+function cancelDelete(){document.getElementById('del-confirm').style.display='none';document.getElementById('save-btn').style.display='inline-block';document.getElementById('del-btn').style.display='inline-block';}
+function confirmDelete(){if(editIdx==null)return;students.splice(editIdx,1);closeModal();renderAll();save();}
+function readMilestones(prog){
+  const ms=prog==='Ph.D.'?MS_PHD:MS_MS;const out={};
+  ms.forEach(m=>{const el=document.getElementById('ms-'+m.replace(/\s+/g,'-'));if(el)out[m]=el.checked;});return out;
+}
+function saveModal(){
+  const prog=document.getElementById('f-mprog').value;
+  const obj={name:document.getElementById('f-name').value.trim(),program:prog,catalogYear:document.getElementById('f-cat').value.trim(),advisor:document.getElementById('f-madv').value.trim(),gradTerm:document.getElementById('f-grad').value.trim(),status:document.getElementById('f-mstat').value,gtaEligible:document.getElementById('f-gta').checked,hrs18:document.getElementById('f-hrs').checked,milestones:readMilestones(prog)};
+  if(!obj.name){toast('Name required');return;}
+  if(editIdx!=null)students[editIdx]=obj;else students.unshift(obj);
+  closeModal();page=0;renderAll();save();
+}
+
+function exportXLSX(){
+  if(typeof XLSX==='undefined'){toast('SheetJS not loaded');return;}
+  const wb=XLSX.utils.book_new();
+  const allMS=[...MS_PHD,...MS_MS];
+  const hdr=['Name','Program','Catalog Year','Advisor','Grad Term','GTA','18hrs Done','Times Taught (auto)','Status',...allMS];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdr,...students.map(s=>[s.name,s.program,s.catalogYear,s.advisor,s.gradTerm,s.gtaEligible?'Yes':'No',s.hrs18?'Yes':'No',taughtFor(s),s.status,...allMS.map(m=>(s.milestones||{})[m]?'Yes':'')])]), 'Students');
+  const gRows=[['Semester',...gtaCourses],...gtaHistory.map(r=>[r.semester,...gtaCourses.map(c=>r.assignments[c]||'')])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gRows),'GTA History');
+  const gaRows=[['Semester','Student','Block 1','Block 2']];
+  gaData.forEach(d=>Object.entries(d.blocks).forEach(([n,bl])=>gaRows.push([d.semester,n,bl[0]||'',bl[1]||''])));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gaRows),'GA Assignments');
+  XLSX.writeFile(wb,'EPY_GradStudents_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function importXLSX(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets['Students'];
+      if(!ws){toast('No "Students" sheet found in file');return;}
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      if(rows.length<2){toast('No student data found');return;}
+      const hdr=rows[0];const nameIdx=hdr.indexOf('Name');const progIdx=hdr.indexOf('Program');
+      const catIdx=hdr.indexOf('Catalog Year');const advIdx=hdr.indexOf('Advisor');
+      const gradIdx=hdr.indexOf('Grad Term');const gtaIdx=hdr.indexOf('GTA');
+      const hrsIdx=hdr.indexOf('18hrs Done');const statIdx=hdr.indexOf('Status');
+      const allMS=[...MS_PHD,...MS_MS];
+      const msIdxs=allMS.map(m=>hdr.indexOf(m));
+      students=rows.slice(1).filter(r=>r[nameIdx]).map(r=>{
+        const ms={};allMS.forEach((m,i)=>{if(msIdxs[i]>=0&&r[msIdxs[i]]==='Yes')ms[m]=true;});
+        return{name:r[nameIdx]||'',program:r[progIdx]||'Ph.D.',catalogYear:r[catIdx]||'',advisor:r[advIdx]||'',gradTerm:r[gradIdx]||'',gtaEligible:r[gtaIdx]==='Yes',hrs18:r[hrsIdx]==='Yes',status:r[statIdx]||'active',milestones:ms};
+      });
+      const gtaWs=wb.Sheets['GTA History'];
+      if(gtaWs){
+        const gtaRows=XLSX.utils.sheet_to_json(gtaWs,{header:1});
+        if(gtaRows.length>1){
+          const gh=gtaRows[0].slice(1);
+          gtaCourses=[...gh];
+          gtaHistory=gtaRows.slice(1).filter(r=>r[0]).map(r=>{
+            const assignments={};gh.forEach((c,i)=>{if(r[i+1])assignments[c]=r[i+1];});
+            return{semester:r[0],assignments};
+          });
+        }
+      }
+      save();renderAll();toast('Import successful — '+students.length+' students loaded');
+    }catch(err){toast('Import failed: '+err.message);}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('modal-wrap').addEventListener('click',function(e){if(e.target===this)closeModal();});
+load();
+</script>
+</body>
+</html>
