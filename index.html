@@ -81,7 +81,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 .rotation-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:.5rem}
 .rotation-controls .fr{margin:0;flex:1;min-width:140px}
 .rotation-controls label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
-.rotation-controls select,.rotation-controls input{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.rotation-controls select{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
 .suggestion-list{display:flex;flex-direction:column;gap:6px;margin-top:.75rem}
 .suggestion-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:9px 14px;gap:10px}
 .suggestion-item.rank1{border-color:var(--accent);border-width:1.5px}
@@ -105,7 +105,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-row{margin-bottom:10px}
 .form-row label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px;font-weight:500}
-.form-row input,.form-row select,.form-row textarea{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
+.form-row input,.form-row select{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none}
 .form-row input:focus,.form-row select:focus{border-color:var(--accent)}
 .form-actions{display:flex;gap:8px;justify-content:space-between;margin-top:1.5rem;align-items:center}
 .ms-section{margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)}
@@ -113,20 +113,19 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 .ms-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)}
 .ms-row:last-child{border-bottom:none}
 .ms-row label{font-size:13px;flex:1;cursor:pointer;color:var(--text)}
-.ms-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75}
+.ms-row input[type=checkbox],.ms-row input[type=radio]{width:16px;height:16px;cursor:pointer;accent-color:#1D9E75;flex-shrink:0}
 .ms-note{font-size:11px;color:var(--text2);margin-bottom:8px;font-style:italic}
 .del-confirm{background:var(--red-light);border:0.5px solid #F09595;border-radius:var(--radius);padding:10px 14px;margin-top:1rem;display:none}
 .del-confirm p{font-size:13px;color:var(--red);margin-bottom:10px}
 .toast{position:fixed;bottom:20px;right:20px;background:#27500A;color:#EAF3DE;padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-.gta-cell-wrap{position:relative;display:inline-block;width:100%}
-.gta-cell-input{width:100%;font-size:12px;padding:4px 8px;border:0.5px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);outline:none}
-.gta-cell-input:focus{border-color:var(--accent)}
+.gta-cell-wrap{position:relative;width:100%}
+.gta-cell-input{width:100%;font-size:12px;padding:5px 8px;border:0.5px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);outline:none;font-family:inherit}
+.gta-cell-input:focus{border-color:var(--accent);background:#fff}
 .gta-cell-input.has-value{background:var(--teal-light);color:var(--teal);font-weight:500;border-color:#5DCAA5}
 .gta-cell-input.is-empty{color:var(--text3)}
-.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);z-index:50;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.12)}
-.autocomplete-item{padding:7px 12px;font-size:12px;cursor:pointer;color:var(--text)}
-.autocomplete-item:hover,.autocomplete-item.ac-active{background:var(--bg2)}
-.import-note{font-size:11px;color:var(--text2);margin-top:4px;font-style:italic}
+.ac-list{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.14);display:none}
+.ac-item{padding:7px 12px;font-size:12px;cursor:pointer;color:var(--text)}
+.ac-item:hover,.ac-item.ac-on{background:var(--bg2)}
 @media(max-width:600px){.form-2col{grid-template-columns:1fr}.stat-row{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -147,7 +146,6 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 <main>
   <div class="tab-bar">
     <button class="tab active" onclick="setView('roster')">Roster</button>
-    <button class="tab" onclick="setView('milestones')">Milestones</button>
     <button class="tab" onclick="setView('rotation')">GTA Rotation</button>
     <button class="tab" onclick="setView('ga')">GA Assignments</button>
   </div>
@@ -170,13 +168,13 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
       <select id="f-prog" onchange="page=0;render()"><option value="">All programs</option><option>Ph.D.</option><option>M.S.</option></select>
       <select id="f-status" onchange="page=0;render()"><option value="">All statuses</option><option value="active">Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select>
       <select id="f-adv" onchange="page=0;render()"><option value="">All advisors</option></select>
-      <select id="f-gta" onchange="page=0;render()"><option value="">GTA: all</option><option value="yes">GTA</option><option value="no">Not GTA</option></select>
+      <select id="f-gta-filter" onchange="page=0;render()"><option value="">GTA: all</option><option value="yes">GTA</option><option value="no">Not GTA</option></select>
     </div>
     <div class="card">
       <div style="overflow-x:auto">
         <table>
           <thead><tr>
-            <th class="sortable" style="width:21%" onclick="sortBy('name')">Student<span class="sa"></span></th>
+            <th class="sortable" style="width:20%" onclick="sortBy('name')">Student<span class="sa"></span></th>
             <th class="sortable" style="width:8%" onclick="sortBy('program')">Program<span class="sa"></span></th>
             <th class="sortable" style="width:12%" onclick="sortBy('catalogYear')">Catalog yr<span class="sa"></span></th>
             <th class="sortable" style="width:11%" onclick="sortBy('advisor')">Advisor<span class="sa"></span></th>
@@ -184,7 +182,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
             <th class="sortable" style="width:7%" onclick="sortBy('gtaEligible')">GTA<span class="sa"></span></th>
             <th class="sortable" style="width:7%" onclick="sortBy('hrs18')">18 hrs<span class="sa"></span></th>
             <th class="sortable" style="width:7%" onclick="sortBy('_taught')">Taught<span class="sa"></span></th>
-            <th style="width:8%">Progress</th>
+            <th style="width:9%">Milestone</th>
             <th class="sortable" style="width:7%" onclick="sortBy('status')">Status<span class="sa"></span></th>
           </tr></thead>
           <tbody id="roster-body"></tbody>
@@ -198,29 +196,20 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
     </div>
   </div>
 
-  <!-- MILESTONES -->
-  <div id="view-milestones" style="display:none">
-    <div class="filters">
-      <input type="text" id="m-search" placeholder="Search name..." oninput="renderMilestones()">
-      <select id="m-prog" onchange="renderMilestones()"><option value="">All programs</option><option>Ph.D.</option><option>M.S.</option></select>
-      <select id="m-adv" onchange="renderMilestones()"><option value="">All advisors</option></select>
-    </div>
-    <div class="card"><div style="overflow-x:auto"><table style="table-layout:auto"><thead id="ms-head"></thead><tbody id="ms-body"></tbody></table></div></div>
-  </div>
-
   <!-- GTA ROTATION -->
   <div id="view-rotation" style="display:none">
     <div class="rotation-box">
       <h3>Suggest next GTA assignment</h3>
       <div class="rotation-controls">
-        <div class="fr"><label>Semester</label><select id="rot-sem"><option value="">— select —</option></select></div>
-        <div class="fr"><label>Course</label><select id="rot-course"><option value="">— select —</option></select></div>
+        <div class="fr"><label>Semester</label>
+          <select id="rot-sem"><option value="">— select —</option></select>
+        </div>
         <button class="btn btn-primary" onclick="runSuggestion()" style="align-self:flex-end">Suggest</button>
       </div>
       <div id="suggestion-output"></div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-      <div style="font-size:13px;color:var(--text2)">GTA teaching history — type to search a student name in each cell</div>
+      <div style="font-size:13px;color:var(--text2)">GTA teaching history — start typing a name to search</div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="addCoursePrompt()">+ Course</button>
         <button class="btn btn-sm" onclick="addSemesterPrompt()">+ Semester</button>
@@ -246,22 +235,45 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
     <h3 id="modal-title">Add student</h3>
     <div class="form-2col">
       <div class="form-row"><label>Full name</label><input id="f-name" type="text"></div>
-      <div class="form-row"><label>Program</label><select id="f-mprog" onchange="buildMsForm(this.value,{})"><option>Ph.D.</option><option>M.S.</option></select></div>
+      <div class="form-row"><label>Program</label>
+        <select id="f-mprog" onchange="onProgChange()"><option>Ph.D.</option><option>M.S.</option></select>
+      </div>
       <div class="form-row"><label>Catalog year</label><input id="f-cat" type="text" placeholder="e.g. Fall 2025"></div>
       <div class="form-row"><label>Advisor</label><input id="f-madv" type="text" list="adv-list"><datalist id="adv-list"></datalist></div>
       <div class="form-row"><label>Tentative grad term</label><input id="f-grad" type="text" placeholder="e.g. Spring 2027"></div>
-      <div class="form-row"><label>Status</label><select id="f-mstat"><option value="active">Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select></div>
+      <div class="form-row"><label>Status</label>
+        <select id="f-mstat"><option value="active">Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select>
+      </div>
     </div>
+
+    <!-- GTA checkbox lives right here in the main form area -->
     <div class="ms-section">
-      <h4>GTA qualifications</h4>
-      <div class="ms-row"><input type="checkbox" id="f-gta" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="f-gta">GTA (employment — has assistantship)</label></div>
-      <div class="ms-row"><input type="checkbox" id="f-hrs" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="f-hrs">18 credit hours in EPY completed</label></div>
-      <div class="ms-row" style="border-bottom:none;padding-top:4px"><span style="font-size:11px;color:var(--text2);font-style:italic">Times taught is calculated automatically from GTA history.</span></div>
+      <h4>Employment</h4>
+      <div class="ms-row">
+        <input type="checkbox" id="f-gta" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer">
+        <label for="f-gta">GTA (has graduate assistantship)</label>
+      </div>
     </div>
+
+    <div class="ms-section">
+      <h4>TA3 Qualification</h4>
+      <div class="ms-row">
+        <input type="checkbox" id="f-hrs" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer">
+        <label for="f-hrs">18 credit hours in EPY completed</label>
+      </div>
+      <div class="ms-row" style="border-bottom:none;padding-top:4px">
+        <span style="font-size:11px;color:var(--text2);font-style:italic">Times taught is calculated automatically from GTA history.</span>
+      </div>
+    </div>
+
     <div class="ms-section" id="ms-form"></div>
+
     <div class="del-confirm" id="del-confirm">
       <p>Remove this student permanently from the roster?</p>
-      <div style="display:flex;gap:8px"><button class="btn btn-danger" onclick="confirmDelete()">Yes, remove</button><button class="btn" onclick="cancelDelete()">Cancel</button></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-danger" onclick="confirmDelete()">Yes, remove</button>
+        <button class="btn" onclick="cancelDelete()">Cancel</button>
+      </div>
     </div>
     <div class="form-actions">
       <div><button class="btn btn-sm" id="del-btn" style="display:none;color:var(--red);border-color:#F09595" onclick="promptDelete()">Delete</button></div>
@@ -275,16 +287,35 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 
 <div class="toast" id="toast"></div>
 
+<!-- GTA SNAPSHOT MODAL -->
+<div class="modal-overlay" id="snap-modal-wrap">
+  <div class="modal" style="width:420px">
+    <h3>Edit GTA list — <span id="snap-modal-sem" style="color:var(--accent)"></span></h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Check everyone who should appear as a GTA in this semester's GA assignments.</p>
+    <div id="snap-modal-body" style="max-height:320px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius);padding:4px 8px"></div>
+    <div class="form-actions" style="margin-top:1.25rem">
+      <div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="closeSnapModal()">Cancel</button>
+        <button class="btn btn-primary" id="snap-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-const KEY='epy_gsm_standalone_v1';
+const KEY='epy_gsm_standalone_v3';
 const PER=15;
 let page=0,editIdx=null,currentView='roster',sortCol='name',sortDir=1;
 
 const MS_PHD=['Preliminary Exam','Dissertation Proposal','Dissertation Defense'];
-const MS_MS=['Comprehensive Exam','Thesis Defense'];
+const MS_MS_OPTS=['Comprehensive Exam','Thesis Defense'];
 const FIXED_FAC=['Bell','Abernathy','Gainer','Parra Martinez'];
 const VAR_FAC=['Karami','Wei','Gallo','Garemani'];
 const ALL_FAC=[...FIXED_FAC,...VAR_FAC];
+
+// Future semesters starting Fall 26
+const FUTURE_SEMS=['Fall 26','Spring 27','Fall 27','Spring 28','Fall 28','Spring 29','Fall 29','Spring 30'];
 
 const SEED_STUDENTS=[
   {name:'Kelly Davis',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
@@ -292,7 +323,7 @@ const SEED_STUDENTS=[
   {name:'Grace Austin',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Karami',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Sam Stewart',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Garemani',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Benjamin Ansah',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
-  {name:'Sayed In',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Sayed In',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{msPath:'Thesis Defense'}},
   {name:'Nancy Florida',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2029',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Leila',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Corinne Kennedy',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
@@ -306,7 +337,7 @@ const SEED_STUDENTS=[
   {name:"Ken'Zyria Williams",program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
   {name:'Carson McTaggart',program:'M.S.',catalogYear:'Fall 2025',advisor:'Wei',gradTerm:'Part-Time',gtaEligible:false,hrs18:false,status:'withdrew',milestones:{}},
   {name:'Alzukari, Rawan',program:'Ph.D.',catalogYear:'Fall 2019',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{'Preliminary Exam':true,'Dissertation Proposal':true,'Dissertation Defense':true}},
-  {name:'Campbell, Kethlin',program:'M.S.',catalogYear:'Fall 2022',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{'Thesis Defense':true}},
+  {name:'Campbell, Kethlin',program:'M.S.',catalogYear:'Fall 2022',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{msPath:'Thesis Defense'}},
   {name:'Pierce, Serenity',program:'M.S.',catalogYear:'',advisor:'Wei',gradTerm:'Spring 2023',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
   {name:'Edward Ansah',program:'M.S.',catalogYear:'Spring 2023',advisor:'Wei',gradTerm:'Fall 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
   {name:'Claire Bland',program:'M.S.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Fall 2024',gtaEligible:false,hrs18:false,status:'graduated',milestones:{}},
@@ -324,33 +355,33 @@ const SEED_GTA=[
   {semester:'Spring 26',assignments:{'3063':'Sayed In','3513':'Nancy Florida','4513':'Leila'}},
   {semester:'Fall 26',assignments:{}},
 ];
-const SEED_GA=[
-  {semester:'Spring 26',blocks:{
-    'Sayed In':['Teaching','Bell'],
-    'Nancy Florida':['Teaching','Garemani'],
-    'Leila':['Teaching','Garemani'],
-    'Akshaya Godavarthi':['Teaching','Karami'],
-    'Seger McGuire':['Gallo','Gallo'],
-    'Grace Austin':['Karami','Abernathy'],
-    'Benjamin Ansah':['Gallo','Gainer'],
-    'Sam Stewart':['Gallo','Parra Martinez'],
-  }},
-];
+const SEED_GA=[{semester:'Spring 26',blocks:{
+  'Sayed In':['Teaching','Bell'],'Nancy Florida':['Teaching','Garemani'],
+  'Leila':['Teaching','Garemani'],'Akshaya Godavarthi':['Teaching','Karami'],
+  'Seger McGuire':['Gallo','Gallo'],'Grace Austin':['Karami','Abernathy'],
+  'Benjamin Ansah':['Gallo','Gainer'],'Sam Stewart':['Gallo','Parra Martinez'],
+}}];
 
 let students=[],gtaHistory=[],gtaCourses=[],gaData=[];
 
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify({students,gtaHistory,gtaCourses,gaData}));toast('Saved');}
-  catch(e){toast('Save error — storage may be full');}
+  catch(e){toast('Save error');}
 }
 function load(){
   try{
     const r=localStorage.getItem(KEY);
-    if(r){const p=JSON.parse(r);if(p&&p.students&&p.students.length){students=p.students;gtaHistory=p.gtaHistory||JSON.parse(JSON.stringify(SEED_GTA));gtaCourses=p.gtaCourses||JSON.parse(JSON.stringify(SEED_COURSES));gaData=p.gaData||JSON.parse(JSON.stringify(SEED_GA));renderAll();return;}}
+    if(r){const p=JSON.parse(r);if(p&&p.students&&p.students.length){
+      students=p.students;gtaHistory=p.gtaHistory||JSON.parse(JSON.stringify(SEED_GTA));
+      gtaCourses=p.gtaCourses||JSON.parse(JSON.stringify(SEED_COURSES));
+      gaData=p.gaData||JSON.parse(JSON.stringify(SEED_GA));renderAll();return;
+    }}
   }catch(e){}
-  students=JSON.parse(JSON.stringify(SEED_STUDENTS));gtaHistory=JSON.parse(JSON.stringify(SEED_GTA));gtaCourses=JSON.parse(JSON.stringify(SEED_COURSES));gaData=JSON.parse(JSON.stringify(SEED_GA));renderAll();
+  students=JSON.parse(JSON.stringify(SEED_STUDENTS));
+  gtaHistory=JSON.parse(JSON.stringify(SEED_GTA));
+  gtaCourses=JSON.parse(JSON.stringify(SEED_COURSES));
+  gaData=JSON.parse(JSON.stringify(SEED_GA));renderAll();
 }
-
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',2400);}
 
 function activeGTAs(){return students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible);}
@@ -364,6 +395,23 @@ function taughtFor(s){
 }
 function termToNum(t){if(!t)return 9999;const m=t.match(/(Spring|Summer|Fall|Winter)\s*(\d{4})/i);if(!m)return 9999;return parseInt(m[2])+({'spring':0,'summer':.4,'fall':.7,'winter':.9}[m[1].toLowerCase()]||0);}
 function nowNum(){const d=new Date();return d.getFullYear()+d.getMonth()/12;}
+function escAttr(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function escJs(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+function milestoneSummary(s){
+  if(s.program==='Ph.D.'){
+    const ms=s.milestones||{};
+    const done=MS_PHD.filter(m=>ms[m]).length;
+    if(!done)return'<span style="color:var(--text3);font-size:12px">—</span>';
+    if(done===MS_PHD.length)return'<span class="badge b-green">Complete</span>';
+    return`<span class="badge b-blue">${done}/${MS_PHD.length}</span>`;
+  } else {
+    const path=(s.milestones||{}).msPath;
+    if(!path)return'<span style="color:var(--text3);font-size:12px">—</span>';
+    // if path is chosen, it's considered done
+    return`<span class="badge b-green">${path}</span>`;
+  }
+}
 
 function renderStats(){
   const act=activeStudents();
@@ -400,7 +448,7 @@ function filtered(){
   const prog=(document.getElementById('f-prog')||{value:''}).value;
   const stat=(document.getElementById('f-status')||{value:''}).value;
   const adv=(document.getElementById('f-adv')||{value:''}).value;
-  const gta=(document.getElementById('f-gta')||{value:''}).value;
+  const gta=(document.getElementById('f-gta-filter')||{value:''}).value;
   return students.filter(s=>{
     if(q&&!s.name.toLowerCase().includes(q)&&!(s.advisor||'').toLowerCase().includes(q))return false;
     if(prog&&s.program!==prog)return false;
@@ -411,7 +459,6 @@ function filtered(){
     return true;
   }).sort((a,b)=>{const av=getSortVal(a,sortCol),bv=getSortVal(b,sortCol);return av<bv?-sortDir:av>bv?sortDir:0;});
 }
-function dotsFor(s){return(s.program==='Ph.D.'?MS_PHD:MS_MS).map(m=>`<span class="dot${(s.milestones||{})[m]?' done':''}" title="${m}"></span>`).join('');}
 function statusBadge(s){if(!s.status||s.status==='active')return'<span class="badge b-teal">active</span>';if(s.status==='graduated')return'<span class="badge b-blue">graduated</span>';return'<span class="badge b-gray">withdrew</span>';}
 function ck(v){return v?'<span class="badge b-green">Yes</span>':'<span style="color:var(--text3);font-size:12px">—</span>';}
 
@@ -433,208 +480,46 @@ function render(){
       <td>${s.catalogYear||'—'}</td><td>${s.advisor||'—'}</td><td>${s.gradTerm||'—'}</td>
       <td>${s.gtaEligible?'<span class="badge b-teal">GTA</span>':'<span style="color:var(--text3);font-size:12px">—</span>'}</td>
       <td>${ck(s.hrs18)}</td><td style="text-align:center;font-weight:600">${t}</td>
-      <td><div class="progress-dots">${dotsFor(s)}</div></td>
+      <td>${milestoneSummary(s)}</td>
       <td>${statusBadge(s)}</td></tr>`;
   }).join('');
 }
 function pg(d){const all=filtered();const pages=Math.max(1,Math.ceil(all.length/PER));page=Math.max(0,Math.min(pages-1,page+d));render();}
 
-function renderMilestones(){
-  const q=(document.getElementById('m-search')||{value:''}).value.toLowerCase();
-  const prog=(document.getElementById('m-prog')||{value:''}).value;
-  const adv=(document.getElementById('m-adv')||{value:''}).value;
-  const advSel=document.getElementById('m-adv');
-  advSel.innerHTML='<option value="">All advisors</option>'+advisors().map(a=>`<option>${a}</option>`).join('');
-  const act=students.filter(s=>{
-    if(s.status&&s.status!=='active')return false;
-    if(q&&!s.name.toLowerCase().includes(q))return false;
-    if(prog&&s.program!==prog)return false;
-    if(adv&&s.advisor!==adv)return false;
-    return true;
-  });
-  const shade='background:var(--bg2)';
-  document.getElementById('ms-head').innerHTML=`<tr>
-    <th style="min-width:160px">Student</th><th style="min-width:70px">Program</th><th style="min-width:100px">Advisor</th>
-    <th style="min-width:120px;text-align:center;font-size:10px">Preliminary Exam</th>
-    <th style="min-width:130px;text-align:center;font-size:10px">Dissertation Proposal</th>
-    <th style="min-width:130px;text-align:center;font-size:10px">Dissertation Defense</th>
-    <th style="min-width:6px;background:var(--border);padding:0"></th>
-    <th style="min-width:120px;text-align:center;font-size:10px">Comprehensive Exam</th>
-    <th style="min-width:110px;text-align:center;font-size:10px">Thesis Defense</th></tr>`;
-  function mrow(s){
-    const i=students.indexOf(s);const isPHD=s.program==='Ph.D.';
-    let r=`<tr><td title="${s.name}">${s.name}</td><td>${isPHD?'<span class="badge b-blue">Ph.D.</span>':'<span class="badge b-amber">M.S.</span>'}</td><td>${s.advisor||'—'}</td>`;
-    MS_PHD.forEach(m=>{r+=isPHD?`<td style="text-align:center"><input type="checkbox" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer" ${(s.milestones||{})[m]?'checked':''} onchange="toggleMS(${i},'${m}',this.checked)"></td>`:`<td style="${shade}"></td>`;});
-    r+=`<td style="background:var(--border);padding:0"></td>`;
-    MS_MS.forEach(m=>{r+=!isPHD?`<td style="text-align:center"><input type="checkbox" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer" ${(s.milestones||{})[m]?'checked':''} onchange="toggleMS(${i},'${m}',this.checked)"></td>`:`<td style="${shade}"></td>`;});
-    return r+'</tr>';
-  }
-  document.getElementById('ms-body').innerHTML=[...act.filter(s=>s.program==='Ph.D.'),...act.filter(s=>s.program==='M.S.')].map(mrow).join('');
-}
-function toggleMS(i,m,v){if(!students[i].milestones)students[i].milestones={};students[i].milestones[m]=v;save();}
-
-function makeACInput(ri,course,val){
-  const uid=`ac-${ri}-${course.replace(/[\s\/]/g,'-')}`;
-  const empty=!val;
-  return`<div class="gta-cell-wrap" id="wrap-${uid}">
-    <input type="text" class="gta-cell-input ${empty?'is-empty':'has-value'}" id="${uid}" value="${empty?'--':val}" autocomplete="off"
-      onfocus="acFocus(this,'${uid}')"
-      oninput="acInput(this,'${uid}',${ri},'${course.replace(/'/g,"\\'")}')"
-      onblur="acBlur(this,'${uid}',${ri},'${course.replace(/'/g,"\\'")}')"
-      onkeydown="acKey(event,'${uid}',${ri},'${course.replace(/'/g,"\\'")}')">
-    <div class="autocomplete-list" id="list-${uid}" style="display:none"></div>
-  </div>`;
-}
-function acFocus(inp,uid){if(inp.value==='--')inp.value='';inp.classList.remove('is-empty');}
-function acInput(inp,uid,ri,course){
-  const q=inp.value.trim().toLowerCase();
-  const list=document.getElementById('list-'+uid);
-  if(!q){list.style.display='none';return;}
-  const matches=students.map(s=>s.name).filter(n=>n.toLowerCase().includes(q)).slice(0,8);
-  if(!matches.length){list.style.display='none';return;}
-  list.innerHTML=matches.map(n=>`<div class="autocomplete-item" data-name="${n}" onmousedown="selectAC(event,'${uid}',${ri},'${course.replace(/'/g,"\\'")}','${n.replace(/'/g,"\\'")}')">${n}</div>`).join('');
-  list.style.display='block';
-}
-function acBlur(inp,uid,ri,course){
-  setTimeout(()=>{
-    const list=document.getElementById('list-'+uid);if(list)list.style.display='none';
-    const val=inp.value.trim();
-    const matched=students.find(s=>s.name.toLowerCase()===val.toLowerCase());
-    if(!val||val==='--'||!matched){inp.value='--';inp.classList.add('is-empty');inp.classList.remove('has-value');gtaHistory[ri].assignments[course]='';}
-    else{inp.value=matched.name;inp.classList.add('has-value');inp.classList.remove('is-empty');gtaHistory[ri].assignments[course]=matched.name;}
-    save();render();
-  },160);
-}
-function acKey(e,uid,ri,course){
-  const list=document.getElementById('list-'+uid);const items=list?[...list.querySelectorAll('.autocomplete-item')]:[];
-  const ai=items.findIndex(el=>el.classList.contains('ac-active'));
-  if(e.key==='ArrowDown'){e.preventDefault();const nx=Math.min(ai+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===nx));}
-  else if(e.key==='ArrowUp'){e.preventDefault();const pv=Math.max(ai-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===pv));}
-  else if(e.key==='Enter'&&ai>=0){e.preventDefault();selectAC(null,uid,ri,course,items[ai].dataset.name);}
-  else if(e.key==='Escape'&&list)list.style.display='none';
-}
-function selectAC(e,uid,ri,course,name){
-  if(e)e.preventDefault();
-  const inp=document.getElementById(uid);if(inp){inp.value=name;inp.classList.add('has-value');inp.classList.remove('is-empty');}
-  const list=document.getElementById('list-'+uid);if(list)list.style.display='none';
-  gtaHistory[ri].assignments[course]=name;save();render();
-}
-
-function renderGTAHistory(){
-  const semSel=document.getElementById('rot-sem');const curSem=semSel.value;
-  semSel.innerHTML='<option value="">— select —</option>'+gtaHistory.map(r=>`<option${r.semester===curSem?' selected':''}>${r.semester}</option>`).join('');
-  document.getElementById('rot-course').innerHTML='<option value="">— select —</option>'+gtaCourses.map(c=>`<option>${c}</option>`).join('');
-  document.getElementById('gta-head').innerHTML='<tr><th style="min-width:90px">Semester</th>'+gtaCourses.map(c=>`<th style="min-width:130px;text-align:center">${c}</th>`).join('')+'</tr>';
-  document.getElementById('gta-body').innerHTML=gtaHistory.map((row,ri)=>{
-    let tr=`<tr><td style="font-weight:600;white-space:nowrap">${row.semester}</td>`;
-    gtaCourses.forEach(c=>{tr+=`<td style="padding:4px 6px">${makeACInput(ri,c,row.assignments[c]||'')}</td>`;});
-    return tr+'</tr>';
-  }).join('');
-}
-function addSemesterPrompt(){
-  const s=prompt('Semester name (e.g. Fall 2027):');if(!s)return;
-  gtaHistory.push({semester:s.trim(),assignments:{}});save();renderGTAHistory();populateGASemSel();
-}
-function addCoursePrompt(){
-  const n=prompt('Course number/name (e.g. 4033):');if(!n)return;
-  const t=n.trim();if(!gtaCourses.includes(t)){gtaCourses.push(t);save();renderGTAHistory();}
-}
-function runSuggestion(){
-  const sem=document.getElementById('rot-sem').value;
-  const course=document.getElementById('rot-course').value;
-  const out=document.getElementById('suggestion-output');
-  const pool=students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible&&s.hrs18);
-  if(!pool.length){out.innerHTML='<p style="font-size:13px;color:var(--text2)">No students meet GTA + 18hr criteria.</p>';return;}
-  const wc=pool.map(s=>({s,t:taughtFor(s)})).sort((a,b)=>a.t-b.t);
-  const minT=wc[0].t;const candidates=wc.slice(0,6);
-  let html=`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${sem||course?`For <strong>${course||'?'}</strong> · <strong>${sem||'?'}</strong> — `:''}Ranked by fewest times taught. Top pick has taught ${minT}×.</div><div class="suggestion-list">`;
-  candidates.forEach(({s,t},idx)=>{
-    const top=idx===0;
-    html+=`<div class="suggestion-item${top?' rank1':''}">
-      <div><div class="sname">${s.name}${top?' <span class="badge b-purple" style="font-size:10px">Top pick</span>':''}</div>
-      <div class="smeta">Taught ${t}× · Advisor: ${s.advisor||'—'} · ${s.program} · ${s.gradTerm||'?'}</div></div>
-      <button class="btn btn-sm btn-primary" onclick="confirmAssign('${s.name.replace(/'/g,"\\'")}','${(sem||'').replace(/'/g,"\\'")}','${(course||'').replace(/'/g,"\\'")}')">Assign</button></div>`;
-  });
-  out.innerHTML=html+'</div>';
-}
-function confirmAssign(name,sem,course){
-  if(!sem||!course){toast('Select a semester and course first');return;}
-  let row=gtaHistory.find(r=>r.semester===sem);
-  if(!row){row={semester:sem,assignments:{}};gtaHistory.push(row);}
-  row.assignments[course]=name;save();renderGTAHistory();render();
-  const nc=taughtFor(students.find(s=>s.name===name)||{name:'',milestones:{}});
-  document.getElementById('suggestion-output').innerHTML=`<div style="background:var(--green-light);border:0.5px solid #97C459;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--green)"><strong>${name}</strong> assigned to ${course} (${sem}). Taught count: ${nc}×.</div>`;
-}
-
-function populateGASemSel(){
-  const sel=document.getElementById('ga-sem-sel');const cur=sel.value;
-  const sems=[...new Set([...gtaHistory.map(r=>r.semester),...gaData.map(d=>d.semester)])];
-  sel.innerHTML='<option value="">— select —</option>'+sems.map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
-}
-function renderGA(){
-  const sem=document.getElementById('ga-sem-sel').value;
-  const content=document.getElementById('ga-content');
-  if(!sem){content.innerHTML='<div style="font-size:13px;color:var(--text2)">Select a semester to view or edit assignments.</div>';return;}
-  let semData=gaData.find(d=>d.semester===sem);
-  if(!semData){semData={semester:sem,blocks:{}};gaData.push(semData);}
-  const gtas=activeGTAs();
-  function isFacFilled(fac){return Object.values(semData.blocks).some(bl=>bl&&(bl[0]===fac||bl[1]===fac));}
-  function facCnt(fac){return Object.values(semData.blocks).reduce((a,bl)=>a+(bl?[bl[0],bl[1]].filter(x=>x===fac).length:0),0);}
-  const bOpts=(cur)=>{
-    let o=`<option value=""${!cur?' selected':''}>— unassigned —</option><option${cur==='Teaching'?' selected':''}>Teaching</option>`;
-    ALL_FAC.forEach(f=>o+=`<option${cur===f?' selected':''}>${f}</option>`);return o;
-  };
-  const isTchg=name=>gtaHistory.some(r=>r.semester===sem&&Object.values(r.assignments).includes(name));
-  content.innerHTML=`
-    <div class="sec-label" style="margin-top:0">Fixed faculty (each needs exactly 1 block)</div>
-    <div class="faculty-needs">${FIXED_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div>${isFacFilled(f)?'<span class="badge b-green">Covered</span>':'<span class="badge b-coral">Needs 10hr</span>'}</div>`).join('')}</div>
-    <div class="sec-label">Variable faculty</div>
-    <div class="faculty-needs">${VAR_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div><span style="font-size:14px;font-weight:600">${facCnt(f)}</span> <span style="font-size:11px;color:var(--text2)">block${facCnt(f)===1?'':'s'}</span></div>`).join('')}</div>
-    <div class="sec-label">GTA blocks — 2 × 10hr each</div>
-    <div class="ga-grid">${gtas.length?gtas.map(s=>{
-      const bl=semData.blocks[s.name]||['',''];const tchg=isTchg(s.name);const sk=s.name.replace(/'/g,"\\'");
-      return`<div class="ga-block">
-        <div class="ga-student-name">${s.name}${tchg?'<span class="badge b-purple" style="font-size:10px;margin-left:6px">Teaching</span>':''}</div>
-        <div class="ga-block-label">Block 1 (10hr)</div>
-        <select onchange="updateGABlock('${sem.replace(/'/g,"\\'")}','${sk}',0,this.value)">${bOpts(bl[0])}</select>
-        <div class="ga-block-label">Block 2 (10hr)</div>
-        <select onchange="updateGABlock('${sem.replace(/'/g,"\\'")}','${sk}',1,this.value)">${bOpts(bl[1])}</select>
-      </div>`;
-    }).join(''):'<div style="font-size:13px;color:var(--text2)">No active GTAs found.</div>'}</div>`;
-}
-function updateGABlock(sem,name,idx,val){
-  let sd=gaData.find(d=>d.semester===sem);if(!sd){sd={semester:sem,blocks:{}};gaData.push(sd);}
-  if(!sd.blocks[name])sd.blocks[name]=['',''];sd.blocks[name][idx]=val;save();renderGA();
-}
-function addGASemesterPrompt(){
-  const s=prompt('Semester (e.g. Fall 2027):');if(!s)return;const t=s.trim();
-  if(!gaData.find(d=>d.semester===t))gaData.push({semester:t,blocks:{}});
-  save();populateGASemSel();document.getElementById('ga-sem-sel').value=t;renderGA();
-}
-
-function renderAll(){
-  render();
-  if(currentView==='milestones')renderMilestones();
-  if(currentView==='rotation')renderGTAHistory();
-  if(currentView==='ga'){populateGASemSel();renderGA();}
-}
-function setView(v){
-  currentView=v;
-  ['roster','milestones','rotation','ga'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['roster','milestones','rotation','ga'][i]===v));
-  if(v==='milestones')renderMilestones();
-  else if(v==='rotation')renderGTAHistory();
-  else if(v==='ga'){populateGASemSel();renderGA();}
-  else render();
-}
-
+/* ---- MILESTONE FORM ---- */
 function buildMsForm(prog,existing){
-  const isPHD=prog==='Ph.D.';const ms=isPHD?MS_PHD:MS_MS;
-  let h=`<h4>${prog} milestones</h4>`;
-  if(!isPHD)h+=`<p class="ms-note">M.S. students complete either a Comprehensive Exam or a Thesis Defense.</p>`;
-  ms.forEach(m=>{const id='ms-'+m.replace(/\s+/g,'-');h+=`<div class="ms-row"><input type="checkbox" id="${id}" ${(existing||{})[m]?'checked':''} style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="${id}">${m}</label></div>`;});
+  const ms=existing||{};
+  let h='<h4>Degree milestones</h4>';
+  if(prog==='Ph.D.'){
+    MS_PHD.forEach(m=>{
+      const id='ms-'+m.replace(/\s+/g,'-');
+      h+=`<div class="ms-row"><input type="checkbox" id="${id}" ${ms[m]?'checked':''} style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="${id}">${m}</label></div>`;
+    });
+  } else {
+    h+=`<p class="ms-note">Select the path this student is taking (selecting one marks it as completed):</p>`;
+    MS_MS_OPTS.forEach(opt=>{
+      const id='ms-path-'+opt.replace(/\s+/g,'-');
+      h+=`<div class="ms-row"><input type="radio" name="ms-path" id="${id}" value="${opt}" ${ms.msPath===opt?'checked':''} style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="${id}">${opt}</label></div>`;
+    });
+    // "None yet" option to clear
+    h+=`<div class="ms-row"><input type="radio" name="ms-path" id="ms-path-none" value="" ${!ms.msPath?'checked':''} style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer"><label for="ms-path-none">Not yet decided</label></div>`;
+  }
   document.getElementById('ms-form').innerHTML=h;
 }
+function onProgChange(){buildMsForm(document.getElementById('f-mprog').value,{});}
+
+function readMilestones(prog){
+  if(prog==='Ph.D.'){
+    const out={};
+    MS_PHD.forEach(m=>{const el=document.getElementById('ms-'+m.replace(/\s+/g,'-'));if(el)out[m]=el.checked;});
+    return out;
+  } else {
+    const sel=document.querySelector('input[name="ms-path"]:checked');
+    return{msPath:sel?sel.value:''};
+  }
+}
+
+/* ---- MODAL ---- */
 function openAdd(){
   editIdx=null;document.getElementById('modal-title').textContent='Add student';
   ['f-name','f-cat','f-madv','f-grad'].forEach(id=>document.getElementById(id).value='');
@@ -646,38 +531,320 @@ function openAdd(){
   buildMsForm('Ph.D.',{});document.getElementById('modal-wrap').classList.add('open');
 }
 function openEdit(i){
-  editIdx=i;const s=students[i];document.getElementById('modal-title').textContent='Edit student';
-  document.getElementById('f-name').value=s.name||'';document.getElementById('f-mprog').value=s.program||'Ph.D.';
-  document.getElementById('f-cat').value=s.catalogYear||'';document.getElementById('f-madv').value=s.advisor||'';
-  document.getElementById('f-grad').value=s.gradTerm||'';document.getElementById('f-mstat').value=s.status||'active';
-  document.getElementById('f-gta').checked=!!s.gtaEligible;document.getElementById('f-hrs').checked=!!s.hrs18;
-  document.getElementById('del-btn').style.display='inline-block';document.getElementById('del-confirm').style.display='none';
+  editIdx=i;const s=students[i];
+  document.getElementById('modal-title').textContent='Edit student';
+  document.getElementById('f-name').value=s.name||'';
+  document.getElementById('f-mprog').value=s.program||'Ph.D.';
+  document.getElementById('f-cat').value=s.catalogYear||'';
+  document.getElementById('f-madv').value=s.advisor||'';
+  document.getElementById('f-grad').value=s.gradTerm||'';
+  document.getElementById('f-mstat').value=s.status||'active';
+  document.getElementById('f-gta').checked=!!s.gtaEligible;
+  document.getElementById('f-hrs').checked=!!s.hrs18;
+  document.getElementById('del-btn').style.display='inline-block';
+  document.getElementById('del-confirm').style.display='none';
   document.getElementById('save-btn').style.display='inline-block';
   document.getElementById('adv-list').innerHTML=advisors().map(a=>`<option>${a}</option>`).join('');
-  buildMsForm(s.program,s.milestones||{});document.getElementById('modal-wrap').classList.add('open');
+  buildMsForm(s.program,s.milestones||{});
+  document.getElementById('modal-wrap').classList.add('open');
 }
 function closeModal(){document.getElementById('modal-wrap').classList.remove('open');editIdx=null;}
 function promptDelete(){document.getElementById('del-confirm').style.display='block';document.getElementById('save-btn').style.display='none';document.getElementById('del-btn').style.display='none';}
 function cancelDelete(){document.getElementById('del-confirm').style.display='none';document.getElementById('save-btn').style.display='inline-block';document.getElementById('del-btn').style.display='inline-block';}
 function confirmDelete(){if(editIdx==null)return;students.splice(editIdx,1);closeModal();renderAll();save();}
-function readMilestones(prog){
-  const ms=prog==='Ph.D.'?MS_PHD:MS_MS;const out={};
-  ms.forEach(m=>{const el=document.getElementById('ms-'+m.replace(/\s+/g,'-'));if(el)out[m]=el.checked;});return out;
-}
 function saveModal(){
   const prog=document.getElementById('f-mprog').value;
-  const obj={name:document.getElementById('f-name').value.trim(),program:prog,catalogYear:document.getElementById('f-cat').value.trim(),advisor:document.getElementById('f-madv').value.trim(),gradTerm:document.getElementById('f-grad').value.trim(),status:document.getElementById('f-mstat').value,gtaEligible:document.getElementById('f-gta').checked,hrs18:document.getElementById('f-hrs').checked,milestones:readMilestones(prog)};
+  const obj={
+    name:document.getElementById('f-name').value.trim(),program:prog,
+    catalogYear:document.getElementById('f-cat').value.trim(),
+    advisor:document.getElementById('f-madv').value.trim(),
+    gradTerm:document.getElementById('f-grad').value.trim(),
+    status:document.getElementById('f-mstat').value,
+    gtaEligible:document.getElementById('f-gta').checked,
+    hrs18:document.getElementById('f-hrs').checked,
+    milestones:readMilestones(prog),
+  };
   if(!obj.name){toast('Name required');return;}
   if(editIdx!=null)students[editIdx]=obj;else students.unshift(obj);
   closeModal();page=0;renderAll();save();
 }
 
+/* ---- GTA ROTATION AUTOCOMPLETE ---- */
+function makeACInput(ri,course,val){
+  const safeC=course.replace(/[\s\/]/g,'-');
+  const uid=`ac-${ri}-${safeC}`;
+  const empty=!val;
+  return`<div class="gta-cell-wrap">
+    <input type="text" class="gta-cell-input ${empty?'is-empty':'has-value'}"
+      id="${uid}" value="${empty?'--':escAttr(val)}"
+      autocomplete="off" spellcheck="false"
+      onfocus="acFocus(this,'${uid}',${ri},'${escJs(course)}')"
+      oninput="acInput(this,'${uid}',${ri},'${escJs(course)}')"
+      onblur="acBlur(this,'${uid}',${ri},'${escJs(course)}')"
+      onkeydown="acKey(event,'${uid}',${ri},'${escJs(course)}')">
+    <div class="ac-list" id="list-${uid}"></div>
+  </div>`;
+}
+
+function acFocus(inp,uid,ri,course){
+  if(inp.value==='--')inp.value='';
+  inp.classList.remove('is-empty');
+  // Show all students on focus so user can browse
+  showACList(inp,uid,ri,course,'');
+}
+
+function acInput(inp,uid,ri,course){
+  showACList(inp,uid,ri,course,inp.value.trim());
+}
+
+function showACList(inp,uid,ri,course,q){
+  const list=document.getElementById('list-'+uid);
+  if(!list)return;
+  const lower=q.toLowerCase();
+  // Filter by query; if empty show all students
+  const names=students.map(s=>s.name);
+  const matches=q?names.filter(n=>n.toLowerCase().includes(lower)):names;
+  if(!matches.length){list.style.display='none';return;}
+  list.innerHTML=matches.slice(0,12).map(n=>`<div class="ac-item" data-name="${escAttr(n)}" onmousedown="selectAC(event,'${uid}',${ri},'${escJs(course)}','${escJs(n)}')">${highlight(n,q)}</div>`).join('');
+  list.style.display='block';
+}
+
+function highlight(name,q){
+  if(!q)return name;
+  const idx=name.toLowerCase().indexOf(q.toLowerCase());
+  if(idx<0)return name;
+  return name.slice(0,idx)+'<strong>'+name.slice(idx,idx+q.length)+'</strong>'+name.slice(idx+q.length);
+}
+
+function acBlur(inp,uid,ri,course){
+  setTimeout(()=>{
+    const list=document.getElementById('list-'+uid);
+    if(list)list.style.display='none';
+    const val=inp.value.trim();
+    if(!val||val==='--'){
+      inp.value='--';inp.classList.add('is-empty');inp.classList.remove('has-value');
+      gtaHistory[ri].assignments[course]='';
+    } else {
+      const matched=students.find(s=>s.name.toLowerCase()===val.toLowerCase());
+      const finalVal=matched?matched.name:val;
+      inp.value=finalVal;inp.classList.add('has-value');inp.classList.remove('is-empty');
+      gtaHistory[ri].assignments[course]=finalVal;
+    }
+    save();render();
+  },200);
+}
+
+function acKey(e,uid,ri,course){
+  const list=document.getElementById('list-'+uid);
+  const items=list?[...list.querySelectorAll('.ac-item')]:[];
+  const ai=items.findIndex(el=>el.classList.contains('ac-on'));
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    const nx=Math.min(ai+1,items.length-1);
+    items.forEach((el,i)=>el.classList.toggle('ac-on',i===nx));
+    if(items[nx])items[nx].scrollIntoView({block:'nearest'});
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    const pv=Math.max(ai-1,0);
+    items.forEach((el,i)=>el.classList.toggle('ac-on',i===pv));
+    if(items[pv])items[pv].scrollIntoView({block:'nearest'});
+  } else if(e.key==='Enter'){
+    e.preventDefault();
+    if(ai>=0){selectAC(null,uid,ri,course,items[ai].dataset.name);}
+    else{document.getElementById(uid).blur();}
+  } else if(e.key==='Escape'){
+    if(list)list.style.display='none';
+  }
+}
+
+function selectAC(e,uid,ri,course,name){
+  if(e)e.preventDefault();
+  const inp=document.getElementById(uid);
+  if(inp){inp.value=name;inp.classList.add('has-value');inp.classList.remove('is-empty');}
+  const list=document.getElementById('list-'+uid);if(list)list.style.display='none';
+  gtaHistory[ri].assignments[course]=name;
+  save();render();
+}
+
+function renderGTAHistory(){
+  // Populate semester dropdown with FUTURE_SEMS only
+  const semSel=document.getElementById('rot-sem');const curSem=semSel.value;
+  semSel.innerHTML='<option value="">— select —</option>'+FUTURE_SEMS.map(s=>`<option${s===curSem?' selected':''}>${s}</option>`).join('');
+
+  document.getElementById('gta-head').innerHTML='<tr><th style="min-width:90px">Semester</th>'+gtaCourses.map(c=>`<th style="min-width:130px;text-align:center">${c}</th>`).join('')+'</tr>';
+  document.getElementById('gta-body').innerHTML=gtaHistory.map((row,ri)=>{
+    let tr=`<tr><td style="font-weight:600;white-space:nowrap">${row.semester}</td>`;
+    gtaCourses.forEach(c=>{tr+=`<td style="padding:4px 6px">${makeACInput(ri,c,row.assignments[c]||'')}</td>`;});
+    return tr+'</tr>';
+  }).join('');
+}
+
+function addSemesterPrompt(){
+  const s=prompt('Semester name (e.g. Fall 2027):');if(!s)return;
+  const t=s.trim();
+  if(!gtaHistory.find(r=>r.semester===t))gtaHistory.push({semester:t,assignments:{}});
+  save();renderGTAHistory();populateGASemSel();
+}
+function addCoursePrompt(){
+  const n=prompt('Course number/name (e.g. 4033):');if(!n)return;
+  const t=n.trim();if(!gtaCourses.includes(t)){gtaCourses.push(t);save();renderGTAHistory();}
+}
+
+function runSuggestion(){
+  const sem=document.getElementById('rot-sem').value;
+  const out=document.getElementById('suggestion-output');
+  const pool=students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible&&s.hrs18);
+  if(!pool.length){out.innerHTML='<p style="font-size:13px;color:var(--text2);padding:8px 0">No students currently meet GTA + 18hr criteria.</p>';return;}
+  if(!sem){out.innerHTML='<p style="font-size:13px;color:var(--text2);padding:8px 0">Please select a semester first.</p>';return;}
+  const wc=pool.map(s=>({s,t:taughtFor(s)})).sort((a,b)=>a.t-b.t);
+  const minT=wc[0].t;
+  let html=`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Suggested order for <strong>${sem}</strong> — ranked by fewest times taught. Top pick has taught ${minT}×.</div><div class="suggestion-list">`;
+  wc.slice(0,6).forEach(({s,t},idx)=>{
+    const top=idx===0;
+    html+=`<div class="suggestion-item${top?' rank1':''}">
+      <div><div class="sname">${s.name}${top?' <span class="badge b-purple" style="font-size:10px">Top pick</span>':''}</div>
+      <div class="smeta">Taught ${t}× · Advisor: ${s.advisor||'—'} · ${s.program} · ${s.gradTerm||'?'}</div></div>
+    </div>`;
+  });
+  out.innerHTML=html+'</div><p style="font-size:11px;color:var(--text2);margin-top:8px">Assign by typing names into the history table below for <strong>'+sem+'</strong>.</p>';
+}
+
+/* ---- GA ASSIGNMENTS ---- */
+function semToNum(s){
+  // converts "Spring 26" or "Fall 2026" style to a sortable number
+  const m=s.match(/(Spring|Summer|Fall|Winter)\s*(\d{2,4})/i);
+  if(!m)return 0;
+  let y=parseInt(m[2]);if(y<100)y+=2000;
+  return y+({'spring':0,'summer':.4,'fall':.7,'winter':.9}[m[1].toLowerCase()]||0);
+}
+const GA_START=semToNum('Spring 26');
+
+function populateGASemSel(forceLatest){
+  const sel=document.getElementById('ga-sem-sel');const cur=sel.value;
+  const allSems=[...new Set([...gtaHistory.map(r=>r.semester),...gaData.map(d=>d.semester)])];
+  // Only show Spring 26 onward
+  const sems=allSems.filter(s=>semToNum(s)>=GA_START);
+  sel.innerHTML='<option value="">— select —</option>'+sems.map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('');
+  if(forceLatest||!cur||!sems.includes(cur)){
+    const latest=sems[sems.length-1];
+    if(latest){sel.value=latest;}
+  }
+}
+function snapshotGTAs(){
+  // Returns names of currently active GTAs
+  return activeGTAs().map(s=>s.name);
+}
+
+function renderGA(){
+  const sem=document.getElementById('ga-sem-sel').value;
+  const content=document.getElementById('ga-content');
+  if(!sem){content.innerHTML='<div style="font-size:13px;color:var(--text2)">Select a semester to view or edit assignments.</div>';return;}
+
+  let sd=gaData.find(d=>d.semester===sem);
+  if(!sd){
+    // First time opening this semester — snapshot current GTA list
+    sd={semester:sem,gtaSnapshot:snapshotGTAs(),blocks:{}};
+    gaData.push(sd);save();
+  }
+  // If no snapshot yet (legacy data), create one now
+  if(!sd.gtaSnapshot)sd.gtaSnapshot=snapshotGTAs();
+
+  const gtaNames=sd.gtaSnapshot;
+  function isFacFilled(fac){return Object.values(sd.blocks).some(bl=>bl&&(bl[0]===fac||bl[1]===fac));}
+  function facCnt(fac){return Object.values(sd.blocks).reduce((a,bl)=>a+(bl?[bl[0],bl[1]].filter(x=>x===fac).length:0),0);}
+  const bOpts=(cur)=>{
+    let o=`<option value=""${!cur?' selected':''}>— unassigned —</option><option${cur==='Teaching'?' selected':''}>Teaching</option>`;
+    ALL_FAC.forEach(f=>o+=`<option${cur===f?' selected':''}>${f}</option>`);return o;
+  };
+  const isTchg=name=>gtaHistory.some(r=>r.semester===sem&&Object.values(r.assignments).includes(name));
+  const semk=escJs(sem);
+
+  const gtaCards=gtaNames.length?gtaNames.map(name=>{
+    const bl=sd.blocks[name]||['',''];const tchg=isTchg(name);const sk=escJs(name);
+    return`<div class="ga-block">
+      <div class="ga-student-name">${name}${tchg?'<span class="badge b-purple" style="font-size:10px;margin-left:6px">Teaching</span>':''}</div>
+      <div class="ga-block-label">Block 1 (10hr)</div>
+      <select onchange="updateGABlock('${semk}','${sk}',0,this.value)">${bOpts(bl[0])}</select>
+      <div class="ga-block-label">Block 2 (10hr)</div>
+      <select onchange="updateGABlock('${semk}','${sk}',1,this.value)">${bOpts(bl[1])}</select>
+    </div>`;
+  }).join(''):'<div style="font-size:13px;color:var(--text2)">No GTAs in this semester\'s snapshot.</div>';
+
+  content.innerHTML=`
+    <div class="sec-label" style="margin-top:0">Fixed faculty (each needs exactly 1 block)</div>
+    <div class="faculty-needs">${FIXED_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div>${isFacFilled(f)?'<span class="badge b-green">Covered</span>':'<span class="badge b-coral">Needs 10hr</span>'}</div>`).join('')}</div>
+    <div class="sec-label">Variable faculty</div>
+    <div class="faculty-needs">${VAR_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div><span style="font-size:14px;font-weight:600">${facCnt(f)}</span> <span style="font-size:11px;color:var(--text2)">block${facCnt(f)===1?'':'s'}</span></div>`).join('')}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;margin-bottom:.5rem">
+      <div class="sec-label" style="margin:0">GTA blocks — 2 × 10hr each <span style="font-size:11px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">(${gtaNames.length} GTAs snapshotted for ${sem})</span></div>
+      <button class="btn btn-sm" onclick="editGTASnapshot('${semk}')">Edit GTA list</button>
+    </div>
+    <div class="ga-grid">${gtaCards}</div>`;
+}
+
+function updateGABlock(sem,name,idx,val){
+  let sd=gaData.find(d=>d.semester===sem);if(!sd){sd={semester:sem,gtaSnapshot:snapshotGTAs(),blocks:{}};gaData.push(sd);}
+  if(!sd.blocks[name])sd.blocks[name]=['',''];sd.blocks[name][idx]=val;save();renderGA();
+}
+
+function editGTASnapshot(sem){
+  const sd=gaData.find(d=>d.semester===sem);if(!sd)return;
+  const current=sd.gtaSnapshot||[];
+  // Build a sorted list of all students who are or were GTAs
+  const allGTANames=[...new Set([
+    ...students.filter(s=>s.gtaEligible).map(s=>s.name),
+    ...current
+  ])].sort();
+
+  const checkboxes=allGTANames.map(name=>{
+    const checked=current.includes(name)?'checked':'';
+    const id='snap-'+name.replace(/\W/g,'-');
+    return`<div class="ms-row">
+      <input type="checkbox" id="${id}" value="${escAttr(name)}" ${checked} style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer;flex-shrink:0">
+      <label for="${id}" style="font-size:13px;cursor:pointer">${name}</label>
+    </div>`;
+  }).join('');
+
+  document.getElementById('snap-modal-sem').textContent=sem;
+  document.getElementById('snap-modal-body').innerHTML=checkboxes||'<p style="font-size:13px;color:var(--text2)">No GTAs found in roster.</p>';
+  document.getElementById('snap-modal-save').onclick=()=>saveGTASnapshot(sem);
+  document.getElementById('snap-modal-wrap').classList.add('open');
+}
+
+function saveGTASnapshot(sem){
+  const sd=gaData.find(d=>d.semester===sem);if(!sd)return;
+  const checked=[...document.querySelectorAll('#snap-modal-body input[type=checkbox]:checked')].map(el=>el.value);
+  sd.gtaSnapshot=checked;
+  document.getElementById('snap-modal-wrap').classList.remove('open');
+  save();renderGA();
+}
+
+function closeSnapModal(){
+  document.getElementById('snap-modal-wrap').classList.remove('open');
+}
+
+function addGASemesterPrompt(){
+  const s=prompt('Semester (e.g. Fall 2027):');if(!s)return;const t=s.trim();
+  if(!gaData.find(d=>d.semester===t)){
+    // Snapshot current GTAs when creating the semester
+    gaData.push({semester:t,gtaSnapshot:snapshotGTAs(),blocks:{}});
+  }
+  save();populateGASemSel();document.getElementById('ga-sem-sel').value=t;renderGA();
+  toast('Snapshot taken: '+snapshotGTAs().length+' GTAs recorded for '+t);
+}
+
+/* ---- EXPORT / IMPORT ---- */
 function exportXLSX(){
   if(typeof XLSX==='undefined'){toast('SheetJS not loaded');return;}
   const wb=XLSX.utils.book_new();
-  const allMS=[...MS_PHD,...MS_MS];
-  const hdr=['Name','Program','Catalog Year','Advisor','Grad Term','GTA','18hrs Done','Times Taught (auto)','Status',...allMS];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdr,...students.map(s=>[s.name,s.program,s.catalogYear,s.advisor,s.gradTerm,s.gtaEligible?'Yes':'No',s.hrs18?'Yes':'No',taughtFor(s),s.status,...allMS.map(m=>(s.milestones||{})[m]?'Yes':'')])]), 'Students');
+  const hdr=['Name','Program','Catalog Year','Advisor','Grad Term','GTA','18hrs Done','Times Taught (auto)','Status','Ph.D. Prelim Exam','Ph.D. Dissertation Proposal','Ph.D. Dissertation Defense','M.S. Path'];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdr,...students.map(s=>{
+    const ms=s.milestones||{};
+    return[s.name,s.program,s.catalogYear,s.advisor,s.gradTerm,
+      s.gtaEligible?'Yes':'No',s.hrs18?'Yes':'No',taughtFor(s),s.status,
+      ms['Preliminary Exam']?'Yes':'',ms['Dissertation Proposal']?'Yes':'',ms['Dissertation Defense']?'Yes':'',
+      ms.msPath||''];
+  })]),'Students');
   const gRows=[['Semester',...gtaCourses],...gtaHistory.map(r=>[r.semester,...gtaCourses.map(c=>r.assignments[c]||'')])];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gRows),'GTA History');
   const gaRows=[['Semester','Student','Block 1','Block 2']];
@@ -693,39 +860,56 @@ function importXLSX(input){
     try{
       const wb=XLSX.read(e.target.result,{type:'array'});
       const ws=wb.Sheets['Students'];
-      if(!ws){toast('No "Students" sheet found in file');return;}
+      if(!ws){toast('No "Students" sheet found');return;}
       const rows=XLSX.utils.sheet_to_json(ws,{header:1});
-      if(rows.length<2){toast('No student data found');return;}
-      const hdr=rows[0];const nameIdx=hdr.indexOf('Name');const progIdx=hdr.indexOf('Program');
-      const catIdx=hdr.indexOf('Catalog Year');const advIdx=hdr.indexOf('Advisor');
-      const gradIdx=hdr.indexOf('Grad Term');const gtaIdx=hdr.indexOf('GTA');
-      const hrsIdx=hdr.indexOf('18hrs Done');const statIdx=hdr.indexOf('Status');
-      const allMS=[...MS_PHD,...MS_MS];
-      const msIdxs=allMS.map(m=>hdr.indexOf(m));
-      students=rows.slice(1).filter(r=>r[nameIdx]).map(r=>{
-        const ms={};allMS.forEach((m,i)=>{if(msIdxs[i]>=0&&r[msIdxs[i]]==='Yes')ms[m]=true;});
-        return{name:r[nameIdx]||'',program:r[progIdx]||'Ph.D.',catalogYear:r[catIdx]||'',advisor:r[advIdx]||'',gradTerm:r[gradIdx]||'',gtaEligible:r[gtaIdx]==='Yes',hrs18:r[hrsIdx]==='Yes',status:r[statIdx]||'active',milestones:ms};
+      if(rows.length<2){toast('No data found');return;}
+      const h=rows[0];const col=k=>h.indexOf(k);
+      students=rows.slice(1).filter(r=>r[col('Name')]).map(r=>{
+        const ms={};
+        if(r[col('Ph.D. Prelim Exam')]==='Yes')ms['Preliminary Exam']=true;
+        if(r[col('Ph.D. Dissertation Proposal')]==='Yes')ms['Dissertation Proposal']=true;
+        if(r[col('Ph.D. Dissertation Defense')]==='Yes')ms['Dissertation Defense']=true;
+        if(r[col('M.S. Path')])ms.msPath=r[col('M.S. Path')];
+        return{name:r[col('Name')]||'',program:r[col('Program')]||'Ph.D.',catalogYear:r[col('Catalog Year')]||'',
+          advisor:r[col('Advisor')]||'',gradTerm:r[col('Grad Term')]||'',
+          gtaEligible:r[col('GTA')]==='Yes',hrs18:r[col('18hrs Done')]==='Yes',
+          status:r[col('Status')]||'active',milestones:ms};
       });
       const gtaWs=wb.Sheets['GTA History'];
       if(gtaWs){
         const gtaRows=XLSX.utils.sheet_to_json(gtaWs,{header:1});
         if(gtaRows.length>1){
-          const gh=gtaRows[0].slice(1);
-          gtaCourses=[...gh];
+          const gh=gtaRows[0].slice(1);gtaCourses=[...gh];
           gtaHistory=gtaRows.slice(1).filter(r=>r[0]).map(r=>{
             const assignments={};gh.forEach((c,i)=>{if(r[i+1])assignments[c]=r[i+1];});
             return{semester:r[0],assignments};
           });
         }
       }
-      save();renderAll();toast('Import successful — '+students.length+' students loaded');
+      save();renderAll();toast('Imported '+students.length+' students');
     }catch(err){toast('Import failed: '+err.message);}
     input.value='';
   };
   reader.readAsArrayBuffer(file);
 }
 
+/* ---- VIEWS ---- */
+function renderAll(){
+  render();
+  if(currentView==='rotation')renderGTAHistory();
+  if(currentView==='ga'){populateGASemSel(true);renderGA();}
+}
+function setView(v){
+  currentView=v;
+  ['roster','rotation','ga'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['roster','rotation','ga'][i]===v));
+  if(v==='rotation')renderGTAHistory();
+  else if(v==='ga'){populateGASemSel(true);renderGA();}
+  else render();
+}
+
 document.getElementById('modal-wrap').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('snap-modal-wrap').addEventListener('click',function(e){if(e.target===this)closeSnapModal();});
 load();
 </script>
 </body>
