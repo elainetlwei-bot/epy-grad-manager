@@ -287,6 +287,29 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 
 <div class="toast" id="toast"></div>
 
+<!-- FACULTY LISTS MODAL -->
+<div class="modal-overlay" id="fac-modal-wrap">
+  <div class="modal" style="width:440px">
+    <h3>Edit faculty lists — <span id="fac-modal-sem" style="color:var(--accent)"></span></h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Separate names with commas. Changes apply to this semester only.</p>
+    <div class="form-row">
+      <label>Fixed faculty (each needs exactly 1 block)</label>
+      <input type="text" id="fac-fixed-input" placeholder="e.g. Bell, Abernathy, Gainer, Parra Martinez">
+    </div>
+    <div class="form-row">
+      <label>Variable faculty (blocks assigned as needed)</label>
+      <input type="text" id="fac-var-input" placeholder="e.g. Karami, Wei, Gallo, Garemani, Grant">
+    </div>
+    <div class="form-actions" style="margin-top:1.25rem">
+      <div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="closeFacModal()">Cancel</button>
+        <button class="btn btn-primary" id="fac-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- GTA SNAPSHOT MODAL -->
 <div class="modal-overlay" id="snap-modal-wrap">
   <div class="modal" style="width:420px">
@@ -310,9 +333,8 @@ let page=0,editIdx=null,currentView='roster',sortCol='name',sortDir=1;
 
 const MS_PHD=['Preliminary Exam','Dissertation Proposal','Dissertation Defense'];
 const MS_MS_OPTS=['Comprehensive Exam','Thesis Defense'];
-const FIXED_FAC=['Bell','Abernathy','Gainer','Parra Martinez'];
-const VAR_FAC=['Karami','Wei','Gallo','Garemani'];
-const ALL_FAC=[...FIXED_FAC,...VAR_FAC];
+const DEFAULT_FIXED_FAC=['Bell','Abernathy','Gainer','Parra Martinez'];
+const DEFAULT_VAR_FAC=['Karami','Wei','Gallo','Garemani','Grant'];
 
 // Future semesters starting Fall 26
 const FUTURE_SEMS=['Fall 26','Spring 27','Fall 27','Spring 28','Fall 28','Spring 29','Fall 29','Spring 30'];
@@ -323,16 +345,16 @@ const SEED_STUDENTS=[
   {name:'Grace Austin',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Karami',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Sam Stewart',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Garemani',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Benjamin Ansah',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
-  {name:'Sayed In',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{msPath:'Thesis Defense'}},
+  {name:'Sayed In Abdullah',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{msPath:'Thesis Defense'}},
   {name:'Nancy Florida',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2029',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
-  {name:'Leila',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Leila Kargaripadar',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Corinne Kennedy',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
   {name:'Akshaya Godavarthi',program:'M.S.',catalogYear:'Fall 2024',advisor:'Karami',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
   {name:'Avery Tate',program:'Ph.D.',catalogYear:'Fall 2025',advisor:'Gallo',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
   {name:'Emma Logan',program:'M.S.',catalogYear:'Fall 2025',advisor:'Karami',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
-  {name:'Hallie House',program:'M.S.',catalogYear:'Fall 2025',advisor:'Garemani',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Hallie Gray House',program:'M.S.',catalogYear:'Fall 2025',advisor:'Garemani',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
   {name:'Colby Ginn',program:'M.S.',catalogYear:'Fall 2025',advisor:'Karami',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
-  {name:'Autumn',program:'Ph.D.',catalogYear:'Spring 2026',advisor:'Garemani',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Autumn Baukman',program:'Ph.D.',catalogYear:'Spring 2026',advisor:'Garemani',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
   {name:'Mary Cooper Bearden',program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
   {name:"Ken'Zyria Williams",program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
   {name:'Carson McTaggart',program:'M.S.',catalogYear:'Fall 2025',advisor:'Wei',gradTerm:'Part-Time',gtaEligible:false,hrs18:false,status:'withdrew',milestones:{}},
@@ -352,12 +374,12 @@ const SEED_GTA=[
   {semester:'Fall 24',assignments:{'3513':'Seger McGuire','3543':'Amber Crenshaw'}},
   {semester:'Spring 25',assignments:{'4313':'Amber Crenshaw'}},
   {semester:'Fall 25',assignments:{'3513':'Benjamin Ansah','3543':'Grace Austin','4513':'Amber Crenshaw','4683':'Amber Crenshaw'}},
-  {semester:'Spring 26',assignments:{'3063':'Sayed In','3513':'Nancy Florida','4513':'Leila'}},
+  {semester:'Spring 26',assignments:{'3063':'Sayed In Abdullah','3513':'Nancy Florida','4513':'Leila Kargaripadar'}},
   {semester:'Fall 26',assignments:{}},
 ];
 const SEED_GA=[{semester:'Spring 26',blocks:{
-  'Sayed In':['Teaching','Bell'],'Nancy Florida':['Teaching','Garemani'],
-  'Leila':['Teaching','Garemani'],'Akshaya Godavarthi':['Teaching','Karami'],
+  'Sayed In Abdullah':['Teaching','Bell'],'Nancy Florida':['Teaching','Garemani'],
+  'Leila Kargaripadar':['Teaching','Garemani'],'Akshaya Godavarthi':['Teaching','Karami'],
   'Seger McGuire':['Gallo','Gallo'],'Grace Austin':['Karami','Abernathy'],
   'Benjamin Ansah':['Gallo','Gainer'],'Sam Stewart':['Gallo','Parra Martinez'],
 }}];
@@ -731,8 +753,19 @@ function populateGASemSel(forceLatest){
   }
 }
 function snapshotGTAs(){
-  // Returns names of currently active GTAs
   return activeGTAs().map(s=>s.name);
+}
+
+function ensureSemData(sem){
+  let sd=gaData.find(d=>d.semester===sem);
+  if(!sd){
+    sd={semester:sem,gtaSnapshot:snapshotGTAs(),fixedFac:[...DEFAULT_FIXED_FAC],varFac:[...DEFAULT_VAR_FAC],blocks:{}};
+    gaData.push(sd);save();
+  }
+  if(!sd.gtaSnapshot) sd.gtaSnapshot=snapshotGTAs();
+  if(!sd.fixedFac) sd.fixedFac=[...DEFAULT_FIXED_FAC];
+  if(!sd.varFac) sd.varFac=[...DEFAULT_VAR_FAC];
+  return sd;
 }
 
 function renderGA(){
@@ -740,24 +773,29 @@ function renderGA(){
   const content=document.getElementById('ga-content');
   if(!sem){content.innerHTML='<div style="font-size:13px;color:var(--text2)">Select a semester to view or edit assignments.</div>';return;}
 
-  let sd=gaData.find(d=>d.semester===sem);
-  if(!sd){
-    // First time opening this semester — snapshot current GTA list
-    sd={semester:sem,gtaSnapshot:snapshotGTAs(),blocks:{}};
-    gaData.push(sd);save();
-  }
-  // If no snapshot yet (legacy data), create one now
-  if(!sd.gtaSnapshot)sd.gtaSnapshot=snapshotGTAs();
-
+  const sd=ensureSemData(sem);
   const gtaNames=sd.gtaSnapshot;
+  const allFac=[...sd.fixedFac,...sd.varFac];
+
   function isFacFilled(fac){return Object.values(sd.blocks).some(bl=>bl&&(bl[0]===fac||bl[1]===fac));}
   function facCnt(fac){return Object.values(sd.blocks).reduce((a,bl)=>a+(bl?[bl[0],bl[1]].filter(x=>x===fac).length:0),0);}
   const bOpts=(cur)=>{
     let o=`<option value=""${!cur?' selected':''}>— unassigned —</option><option${cur==='Teaching'?' selected':''}>Teaching</option>`;
-    ALL_FAC.forEach(f=>o+=`<option${cur===f?' selected':''}>${f}</option>`);return o;
+    allFac.forEach(f=>o+=`<option${cur===f?' selected':''}>${f}</option>`);return o;
   };
   const isTchg=name=>gtaHistory.some(r=>r.semester===sem&&Object.values(r.assignments).includes(name));
   const semk=escJs(sem);
+
+  const fixedCards=sd.fixedFac.map(f=>`
+    <div class="fac-card"><div class="fac-name">${f}</div>
+    ${isFacFilled(f)?'<span class="badge b-green">Covered</span>':'<span class="badge b-coral">Needs 10hr</span>'}
+    </div>`).join('');
+
+  const varCards=sd.varFac.map(f=>`
+    <div class="fac-card"><div class="fac-name">${f}</div>
+    <span style="font-size:14px;font-weight:600">${facCnt(f)}</span>
+    <span style="font-size:11px;color:var(--text2)"> block${facCnt(f)===1?'':'s'}</span>
+    </div>`).join('');
 
   const gtaCards=gtaNames.length?gtaNames.map(name=>{
     const bl=sd.blocks[name]||['',''];const tchg=isTchg(name);const sk=escJs(name);
@@ -771,20 +809,49 @@ function renderGA(){
   }).join(''):'<div style="font-size:13px;color:var(--text2)">No GTAs in this semester\'s snapshot.</div>';
 
   content.innerHTML=`
-    <div class="sec-label" style="margin-top:0">Fixed faculty (each needs exactly 1 block)</div>
-    <div class="faculty-needs">${FIXED_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div>${isFacFilled(f)?'<span class="badge b-green">Covered</span>':'<span class="badge b-coral">Needs 10hr</span>'}</div>`).join('')}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="sec-label" style="margin:0">Fixed faculty (each needs exactly 1 block)</div>
+      <button class="btn btn-sm" onclick="editFacultyLists('${semk}')">Edit faculty lists</button>
+    </div>
+    <div class="faculty-needs">${fixedCards}</div>
     <div class="sec-label">Variable faculty</div>
-    <div class="faculty-needs">${VAR_FAC.map(f=>`<div class="fac-card"><div class="fac-name">${f}</div><span style="font-size:14px;font-weight:600">${facCnt(f)}</span> <span style="font-size:11px;color:var(--text2)">block${facCnt(f)===1?'':'s'}</span></div>`).join('')}</div>
+    <div class="faculty-needs">${varCards}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1rem;margin-bottom:.5rem">
-      <div class="sec-label" style="margin:0">GTA blocks — 2 × 10hr each <span style="font-size:11px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">(${gtaNames.length} GTAs snapshotted for ${sem})</span></div>
+      <div class="sec-label" style="margin:0">GTA blocks — 2 x 10hr each
+        <span style="font-size:11px;color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0">(${gtaNames.length} GTAs for ${sem})</span>
+      </div>
       <button class="btn btn-sm" onclick="editGTASnapshot('${semk}')">Edit GTA list</button>
     </div>
     <div class="ga-grid">${gtaCards}</div>`;
 }
 
 function updateGABlock(sem,name,idx,val){
-  let sd=gaData.find(d=>d.semester===sem);if(!sd){sd={semester:sem,gtaSnapshot:snapshotGTAs(),blocks:{}};gaData.push(sd);}
-  if(!sd.blocks[name])sd.blocks[name]=['',''];sd.blocks[name][idx]=val;save();renderGA();
+  const sd=ensureSemData(sem);
+  if(!sd.blocks[name])sd.blocks[name]=['',''];
+  sd.blocks[name][idx]=val;save();renderGA();
+}
+
+function editFacultyLists(sem){
+  const sd=ensureSemData(sem);
+  document.getElementById('fac-modal-sem').textContent=sem;
+  document.getElementById('fac-fixed-input').value=sd.fixedFac.join(', ');
+  document.getElementById('fac-var-input').value=sd.varFac.join(', ');
+  document.getElementById('fac-modal-save').onclick=()=>saveFacultyLists(sem);
+  document.getElementById('fac-modal-wrap').classList.add('open');
+}
+
+function saveFacultyLists(sem){
+  const sd=ensureSemData(sem);
+  const fixedRaw=document.getElementById('fac-fixed-input').value;
+  const varRaw=document.getElementById('fac-var-input').value;
+  sd.fixedFac=fixedRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  sd.varFac=varRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  document.getElementById('fac-modal-wrap').classList.remove('open');
+  save();renderGA();
+}
+
+function closeFacModal(){
+  document.getElementById('fac-modal-wrap').classList.remove('open');
 }
 
 function editGTASnapshot(sem){
@@ -825,12 +892,9 @@ function closeSnapModal(){
 
 function addGASemesterPrompt(){
   const s=prompt('Semester (e.g. Fall 2027):');if(!s)return;const t=s.trim();
-  if(!gaData.find(d=>d.semester===t)){
-    // Snapshot current GTAs when creating the semester
-    gaData.push({semester:t,gtaSnapshot:snapshotGTAs(),blocks:{}});
-  }
+  ensureSemData(t);
   save();populateGASemSel();document.getElementById('ga-sem-sel').value=t;renderGA();
-  toast('Snapshot taken: '+snapshotGTAs().length+' GTAs recorded for '+t);
+  toast('New semester created: '+t);
 }
 
 /* ---- EXPORT / IMPORT ---- */
@@ -910,6 +974,7 @@ function setView(v){
 
 document.getElementById('modal-wrap').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('snap-modal-wrap').addEventListener('click',function(e){if(e.target===this)closeSnapModal();});
+document.getElementById('fac-modal-wrap').addEventListener('click',function(e){if(e.target===this)closeFacModal();});
 load();
 </script>
 </body>
