@@ -377,12 +377,26 @@ const SEED_GTA=[
   {semester:'Spring 26',assignments:{'3063':'Sayed In Abdullah','3513':'Nancy Florida','4513':'Leila Kargaripadar'}},
   {semester:'Fall 26',assignments:{}},
 ];
-const SEED_GA=[{semester:'Spring 26',blocks:{
-  'Sayed In Abdullah':['Teaching','Bell'],'Nancy Florida':['Teaching','Garemani'],
-  'Leila Kargaripadar':['Teaching','Garemani'],'Akshaya Godavarthi':['Teaching','Karami'],
-  'Seger McGuire':['Gallo','Gallo'],'Grace Austin':['Karami','Abernathy'],
-  'Benjamin Ansah':['Gallo','Gainer'],'Sam Stewart':['Gallo','Parra Martinez'],
-}}];
+const SEED_GA=[{
+  semester:'Spring 26',
+  gtaSnapshot:['Sayed In Abdullah','Nancy Florida','Leila Kargaripadar','Akshaya Godavarthi','Seger McGuire','Grace Austin','Benjamin Ansah','Sam Stewart','Kelly Davis','Corinne Kennedy','Avery Tate','Autumn Baukman'],
+  fixedFac:[...DEFAULT_FIXED_FAC],
+  varFac:[...DEFAULT_VAR_FAC],
+  blocks:{
+    'Sayed In Abdullah':['Teaching','Bell'],
+    'Nancy Florida':['Teaching','Garemani'],
+    'Leila Kargaripadar':['Teaching','Garemani'],
+    'Akshaya Godavarthi':['Teaching','Karami'],
+    'Seger McGuire':['Gallo','Gallo'],
+    'Grace Austin':['Karami','Abernathy'],
+    'Benjamin Ansah':['Gallo','Gainer'],
+    'Sam Stewart':['Gallo','Parra Martinez'],
+    'Kelly Davis':['',''],
+    'Corinne Kennedy':['',''],
+    'Avery Tate':['',''],
+    'Autumn Baukman':['',''],
+  }
+}];
 
 let students=[],gtaHistory=[],gtaCourses=[],gaData=[];
 
@@ -390,13 +404,52 @@ function save(){
   try{localStorage.setItem(KEY,JSON.stringify({students,gtaHistory,gtaCourses,gaData}));toast('Saved');}
   catch(e){toast('Save error');}
 }
+
+// Rename map for migrating old student names to new ones
+const NAME_MIGRATIONS={
+  'Sayed In':'Sayed In Abdullah',
+  'Leila':'Leila Kargaripadar',
+  'Hallie House':'Hallie Gray House',
+  'Autumn':'Autumn Baukman',
+};
+
+function migrateData(){
+  // Fix student names
+  students.forEach(s=>{
+    if(NAME_MIGRATIONS[s.name]) s.name=NAME_MIGRATIONS[s.name];
+  });
+  // Fix GTA history assignments
+  gtaHistory.forEach(row=>{
+    Object.keys(row.assignments).forEach(course=>{
+      const v=row.assignments[course];
+      if(NAME_MIGRATIONS[v]) row.assignments[course]=NAME_MIGRATIONS[v];
+    });
+  });
+  // Fix GA block keys
+  gaData.forEach(sd=>{
+    const newBlocks={};
+    Object.entries(sd.blocks||{}).forEach(([name,bl])=>{
+      const fixed=NAME_MIGRATIONS[name]||name;
+      newBlocks[fixed]=bl;
+    });
+    sd.blocks=newBlocks;
+    // Ensure fixedFac and varFac exist
+    if(!sd.fixedFac) sd.fixedFac=[...DEFAULT_FIXED_FAC];
+    if(!sd.varFac) sd.varFac=[...DEFAULT_VAR_FAC];
+    if(!sd.gtaSnapshot) sd.gtaSnapshot=snapshotGTAs();
+    // Add Grant to varFac if not present
+    if(!sd.varFac.includes('Grant')) sd.varFac.push('Grant');
+  });
+}
+
 function load(){
   try{
     const r=localStorage.getItem(KEY);
     if(r){const p=JSON.parse(r);if(p&&p.students&&p.students.length){
       students=p.students;gtaHistory=p.gtaHistory||JSON.parse(JSON.stringify(SEED_GTA));
       gtaCourses=p.gtaCourses||JSON.parse(JSON.stringify(SEED_COURSES));
-      gaData=p.gaData||JSON.parse(JSON.stringify(SEED_GA));renderAll();return;
+      gaData=p.gaData||JSON.parse(JSON.stringify(SEED_GA));
+      migrateData();save();renderAll();return;
     }}
   }catch(e){}
   students=JSON.parse(JSON.stringify(SEED_STUDENTS));
