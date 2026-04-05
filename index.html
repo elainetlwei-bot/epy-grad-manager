@@ -850,14 +850,16 @@ function renderGA(){
     <span style="font-size:11px;color:var(--text2)"> block${facCnt(f)===1?'':'s'}</span>
     </div>`).join('');
 
+  // Use data attributes to store block values; set .value after innerHTML renders
   const gtaCards=gtaNames.length?gtaNames.map(name=>{
     const bl=sd.blocks[name]||['',''];const tchg=isTchg(name);const sk=escJs(name);
+    const uid=name.replace(/\W/g,'-');
     return`<div class="ga-block">
       <div class="ga-student-name">${name}${tchg?'<span class="badge b-purple" style="font-size:10px;margin-left:6px">Teaching</span>':''}</div>
       <div class="ga-block-label">Block 1 (10hr)</div>
-      <select onchange="updateGABlock('${semk}','${sk}',0,this.value)">${bOpts(bl[0])}</select>
+      <select id="bl-${uid}-0" data-v="${escAttr(bl[0]||'')}" onchange="updateGABlock('${semk}','${sk}',0,this.value)">${bOpts('')}</select>
       <div class="ga-block-label">Block 2 (10hr)</div>
-      <select onchange="updateGABlock('${semk}','${sk}',1,this.value)">${bOpts(bl[1])}</select>
+      <select id="bl-${uid}-1" data-v="${escAttr(bl[1]||'')}" onchange="updateGABlock('${semk}','${sk}',1,this.value)">${bOpts('')}</select>
     </div>`;
   }).join(''):'<div style="font-size:13px;color:var(--text2)">No GTAs in this semester\'s snapshot.</div>';
 
@@ -876,6 +878,10 @@ function renderGA(){
       <button class="btn btn-sm" onclick="editGTASnapshot('${semk}')">Edit GTA list</button>
     </div>
     <div class="ga-grid">${gtaCards}</div>`;
+  // Set select values after innerHTML renders (selected attr unreliable in dynamic HTML)
+  document.querySelectorAll('#ga-content select[data-v]').forEach(sel=>{
+    sel.value=sel.getAttribute('data-v')||'';
+  });
 }
 
 function updateGABlock(sem,name,idx,val){
