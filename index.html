@@ -166,7 +166,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
     <div class="filters">
       <input type="text" id="f-search" placeholder="Search name or advisor..." oninput="page=0;render()">
       <select id="f-prog" onchange="page=0;render()"><option value="">All programs</option><option>Ph.D.</option><option>M.S.</option></select>
-      <select id="f-status" onchange="page=0;render()"><option value="">All statuses</option><option value="active">Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select>
+      <select id="f-status" onchange="page=0;render()"><option value="">All statuses</option><option value="active" selected>Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select>
       <select id="f-adv" onchange="page=0;render()"><option value="">All advisors</option></select>
       <select id="f-gta-filter" onchange="page=0;render()"><option value="">GTA: all</option><option value="yes">GTA</option><option value="no">Not GTA</option></select>
     </div>
@@ -329,7 +329,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 <script>
 const KEY='epy_gsm_shell_v1';
 const PER=15;
-let page=0,editIdx=null,currentView='roster',sortCol='name',sortDir=1;
+let page=0,editIdx=null,currentView='roster',sortCol='catalogYear',sortDir=1;
 
 const MS_PHD=['Preliminary Exam','Dissertation Proposal','Dissertation Defense'];
 const MS_MS_OPTS=['Comprehensive Exam','Thesis Defense'];
@@ -890,9 +890,27 @@ function exportXLSX(){
   })]),'Students');
   const gRows=[['Semester',...gtaCourses],...gtaHistory.map(r=>[r.semester,...gtaCourses.map(c=>r.assignments[c]||'')])];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gRows),'GTA History');
+  // GA Assignments — one row per student per semester, plus metadata rows
   const gaRows=[['Semester','Student','Block 1','Block 2']];
-  gaData.forEach(d=>Object.entries(d.blocks).forEach(([n,bl])=>gaRows.push([d.semester,n,bl[0]||'',bl[1]||''])));
+  gaData.forEach(d=>{
+    const names=d.gtaSnapshot||[];
+    // Write a row for every GTA in the snapshot, even if unassigned
+    const allNames=new Set([...names,...Object.keys(d.blocks||{})]);
+    allNames.forEach(n=>{
+      const bl=(d.blocks||{})[n]||['',''];
+      gaRows.push([d.semester,n,bl[0]||'',bl[1]||'']);
+    });
+  });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gaRows),'GA Assignments');
+
+  // GA Metadata — stores snapshot, fixedFac, varFac per semester
+  const metaRows=[['Semester','Type','Values']];
+  gaData.forEach(d=>{
+    metaRows.push([d.semester,'gtaSnapshot',(d.gtaSnapshot||[]).join('|')]);
+    metaRows.push([d.semester,'fixedFac',(d.fixedFac||DEFAULT_FIXED_FAC).join('|')]);
+    metaRows.push([d.semester,'varFac',(d.varFac||DEFAULT_VAR_FAC).join('|')]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(metaRows),'GA Metadata');
   XLSX.writeFile(wb,'EPY_GradStudents_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
@@ -927,6 +945,35 @@ function importXLSX(input){
             const assignments={};gh.forEach((c,i)=>{if(r[i+1])assignments[c]=r[i+1];});
             return{semester:r[0],assignments};
           });
+        }
+      }
+      // Import GA Assignments
+      const gaWs=wb.Sheets['GA Assignments'];
+      const gaMetaWs=wb.Sheets['GA Metadata'];
+      if(gaWs){
+        const gaRows=XLSX.utils.sheet_to_json(gaWs,{header:1});
+        if(gaRows.length>1){
+          // Build gaData from rows
+          const gaMap={};
+          gaRows.slice(1).filter(r=>r[0]&&r[1]).forEach(r=>{
+            const sem=r[0],name=r[1],b1=r[2]||'',b2=r[3]||'';
+            if(!gaMap[sem])gaMap[sem]={semester:sem,blocks:{},gtaSnapshot:[],fixedFac:[...DEFAULT_FIXED_FAC],varFac:[...DEFAULT_VAR_FAC]};
+            gaMap[sem].blocks[name]=[b1,b2];
+            if(!gaMap[sem].gtaSnapshot.includes(name))gaMap[sem].gtaSnapshot.push(name);
+          });
+          // Apply metadata if present
+          if(gaMetaWs){
+            const metaRows=XLSX.utils.sheet_to_json(gaMetaWs,{header:1});
+            metaRows.slice(1).filter(r=>r[0]&&r[1]).forEach(r=>{
+              const sem=r[0],type=r[1],vals=(r[2]||'').split('|').filter(Boolean);
+              if(gaMap[sem]){
+                if(type==='gtaSnapshot')gaMap[sem].gtaSnapshot=vals;
+                if(type==='fixedFac')gaMap[sem].fixedFac=vals;
+                if(type==='varFac')gaMap[sem].varFac=vals;
+              }
+            });
+          }
+          gaData=Object.values(gaMap);
         }
       }
       save();renderAll();toast('Imported '+students.length+' students');
