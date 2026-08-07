@@ -174,7 +174,8 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
       <div style="overflow-x:auto">
         <table>
           <thead><tr>
-            <th class="sortable" style="width:20%" onclick="sortBy('name')">Student<span class="sa"></span></th>
+            <th class="sortable" style="width:18%" onclick="sortBy('name')">Student<span class="sa"></span></th>
+            <th class="sortable" style="width:8%" onclick="sortBy('netID')">NetID<span class="sa"></span></th>
             <th class="sortable" style="width:8%" onclick="sortBy('program')">Program<span class="sa"></span></th>
             <th class="sortable" style="width:12%" onclick="sortBy('catalogYear')">Catalog yr<span class="sa"></span></th>
             <th class="sortable" style="width:11%" onclick="sortBy('advisor')">Advisor<span class="sa"></span></th>
@@ -235,6 +236,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
     <h3 id="modal-title">Add student</h3>
     <div class="form-2col">
       <div class="form-row"><label>Full name</label><input id="f-name" type="text"></div>
+      <div class="form-row"><label>NetID</label><input id="f-netid" type="text" placeholder="e.g. abc123"></div>
       <div class="form-row"><label>Program</label>
         <select id="f-mprog" onchange="onProgChange()"><option>Ph.D.</option><option>M.S.</option></select>
       </div>
@@ -327,7 +329,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 </div>
 
 <script>
-const KEY='epy_gsm_shell_v1';
+const KEY='epy_gsm_standalone_v4';
 const PER=15;
 let page=0,editIdx=null,currentView='roster',sortCol='catalogYear',sortDir=1;
 
@@ -339,12 +341,51 @@ const DEFAULT_VAR_FAC=['Karami','Wei','Gallo','Garemani','Grant'];
 // Future semesters starting Fall 26
 const FUTURE_SEMS=['Fall 26','Spring 27','Fall 27','Spring 28','Fall 28','Spring 29','Fall 29','Spring 30'];
 
-const SEED_STUDENTS=[];
+const SEED_STUDENTS=[
+  {name:'Kelly Davis',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Seger McGuire',program:'Ph.D.',catalogYear:'Fall 2022',advisor:'Karami',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Grace Austin',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Karami',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Sam Stewart',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Garemani',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Benjamin Ansah',program:'Ph.D.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Spring 2028',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Sayed In Abdullah',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{msPath:'Thesis Defense'}},
+  {name:'Nancy Florida',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2029',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Leila Kargaripadar',program:'M.S.',catalogYear:'Fall 2024',advisor:'Garemani',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Corinne Kennedy',program:'Ph.D.',catalogYear:'Fall 2024',advisor:'Gallo',gradTerm:'Part-Time',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Akshaya Godavarthi',program:'M.S.',catalogYear:'Fall 2024',advisor:'Karami',gradTerm:'Spring 2026',gtaEligible:true,hrs18:true,status:'active',milestones:{}},
+  {name:'Avery Tate',program:'Ph.D.',catalogYear:'Fall 2025',advisor:'Gallo',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Emma Logan',program:'M.S.',catalogYear:'Fall 2025',advisor:'Karami',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Hallie Gray House',program:'M.S.',catalogYear:'Fall 2025',advisor:'Garemani',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Colby Ginn',program:'M.S.',catalogYear:'Fall 2025',advisor:'Karami',gradTerm:'Spring 2027',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Autumn Baukman',program:'Ph.D.',catalogYear:'Spring 2026',advisor:'Garemani',gradTerm:'Spring 2030',gtaEligible:true,hrs18:false,status:'active',milestones:{}},
+  {name:'Mary Cooper Bearden',program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:"Ken'Zyria Williams",program:'M.S.',catalogYear:'Fall 2026',advisor:'',gradTerm:'',gtaEligible:false,hrs18:false,status:'active',milestones:{}},
+  {name:'Carson McTaggart',program:'M.S.',catalogYear:'Fall 2025',advisor:'Wei',gradTerm:'Part-Time',gtaEligible:false,hrs18:false,status:'withdrew',milestones:{}},
+  {name:'Alzukari, Rawan',program:'Ph.D.',catalogYear:'Fall 2019',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{'Preliminary Exam':true,'Dissertation Proposal':true,'Dissertation Defense':true}},
+  {name:'Campbell, Kethlin',program:'M.S.',catalogYear:'Fall 2022',advisor:'Gallo',gradTerm:'Spring 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{msPath:'Thesis Defense'}},
+  {name:'Pierce, Serenity',program:'M.S.',catalogYear:'',advisor:'Wei',gradTerm:'Spring 2023',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Edward Ansah',program:'M.S.',catalogYear:'Spring 2023',advisor:'Wei',gradTerm:'Fall 2024',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Claire Bland',program:'M.S.',catalogYear:'Fall 2023',advisor:'Gallo',gradTerm:'Fall 2024',gtaEligible:false,hrs18:false,status:'graduated',milestones:{}},
+  {name:'Sandys Ayuumah',program:'M.S.',catalogYear:'Fall 2023',advisor:'Karami',gradTerm:'Spring 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Heather Omane',program:'M.S.',catalogYear:'Fall 2023',advisor:'Wei',gradTerm:'Spring 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Amber Crenshaw',program:'Ph.D.',catalogYear:'Fall 2022',advisor:'Wei',gradTerm:'Fall 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+  {name:'Allison Johnson',program:'M.S.',catalogYear:'Fall 2024',advisor:'Wei',gradTerm:'Fall 2025',gtaEligible:true,hrs18:true,status:'graduated',milestones:{}},
+];
 const SEED_COURSES=['3063','3503','3513','3543','4313','4513','4683','4683 Online'];
 const SEED_GTA=[
+  {semester:'Spring 24',assignments:{'3063':'Sam Stewart','3543':'Claire Bland','3503':'Amber Crenshaw'}},
+  {semester:'Fall 24',assignments:{'3513':'Seger McGuire','3543':'Amber Crenshaw'}},
+  {semester:'Spring 25',assignments:{'4313':'Amber Crenshaw'}},
+  {semester:'Fall 25',assignments:{'3513':'Benjamin Ansah','3543':'Grace Austin','4513':'Amber Crenshaw','4683':'Amber Crenshaw'}},
+  {semester:'Spring 26',assignments:{'3063':'Sayed In Abdullah','3513':'Nancy Florida','4513':'Leila Kargaripadar'}},
   {semester:'Fall 26',assignments:{}},
 ];
-const SEED_GA=[];
+const SEED_GA=[{
+  semester:'Spring 26',
+  gtaSnapshot:['Sayed In Abdullah','Nancy Florida','Leila Kargaripadar','Akshaya Godavarthi','Seger McGuire','Grace Austin','Benjamin Ansah','Sam Stewart','Kelly Davis','Corinne Kennedy','Avery Tate','Autumn Baukman'],
+  fixedFac:[...DEFAULT_FIXED_FAC],
+  varFac:[...DEFAULT_VAR_FAC],
+  blocks:{}
+}];
 
 let students=[],gtaHistory=[],gtaCourses=[],gaData=[];
 
@@ -353,12 +394,40 @@ function save(){
   catch(e){toast('Save error');}
 }
 
+// Rename map for migrating old student names to new ones
+const NAME_MIGRATIONS={
+  'Sayed In':'Sayed In Abdullah',
+  'Leila':'Leila Kargaripadar',
+  'Hallie House':'Hallie Gray House',
+  'Autumn':'Autumn Baukman',
+};
+
 function migrateData(){
-  // Ensure GA data has required fields
+  // Fix student names
+  students.forEach(s=>{
+    if(NAME_MIGRATIONS[s.name]) s.name=NAME_MIGRATIONS[s.name];
+  });
+  // Fix GTA history assignments
+  gtaHistory.forEach(row=>{
+    Object.keys(row.assignments).forEach(course=>{
+      const v=row.assignments[course];
+      if(NAME_MIGRATIONS[v]) row.assignments[course]=NAME_MIGRATIONS[v];
+    });
+  });
+  // Fix GA block keys
   gaData.forEach(sd=>{
+    const newBlocks={};
+    Object.entries(sd.blocks||{}).forEach(([name,bl])=>{
+      const fixed=NAME_MIGRATIONS[name]||name;
+      newBlocks[fixed]=bl;
+    });
+    sd.blocks=newBlocks;
+    // Ensure fixedFac and varFac exist
     if(!sd.fixedFac) sd.fixedFac=[...DEFAULT_FIXED_FAC];
     if(!sd.varFac) sd.varFac=[...DEFAULT_VAR_FAC];
-    if(!sd.gtaSnapshot) sd.gtaSnapshot=[];
+    if(!sd.gtaSnapshot) sd.gtaSnapshot=snapshotGTAs();
+    // Add Grant to varFac if not present
+    if(!sd.varFac.includes('Grant')) sd.varFac.push('Grant');
   });
 }
 
@@ -429,6 +498,7 @@ function getSortVal(s,col){
   if(col==='_taught')return taughtFor(s);
   if(col==='gradTerm'||col==='catalogYear')return termToNum(s[col]);
   if(col==='gtaEligible'||col==='hrs18')return s[col]?0:1;
+  if(col==='netID')return(s.netID||'').toLowerCase();
   return(s[col]||'').toString().toLowerCase();
 }
 function updateSortHdrs(){
@@ -471,6 +541,7 @@ function render(){
     const rdot=isReady(s)?'<span class="dot done" style="width:8px;height:8px;margin-left:4px;vertical-align:middle" title="Ready to teach"></span>':'';
     return`<tr onclick="openEdit(${i})">
       <td title="${s.name}">${s.name}${rdot}</td>
+      <td>${s.netID||'—'}</td>
       <td>${s.program==='Ph.D.'?'<span class="badge b-blue">Ph.D.</span>':'<span class="badge b-amber">M.S.</span>'}</td>
       <td>${s.catalogYear||'—'}</td><td>${s.advisor||'—'}</td><td>${s.gradTerm||'—'}</td>
       <td>${s.gtaEligible?'<span class="badge b-teal">GTA</span>':'<span style="color:var(--text3);font-size:12px">—</span>'}</td>
@@ -517,7 +588,7 @@ function readMilestones(prog){
 /* ---- MODAL ---- */
 function openAdd(){
   editIdx=null;document.getElementById('modal-title').textContent='Add student';
-  ['f-name','f-cat','f-madv','f-grad'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-netid','f-cat','f-madv','f-grad'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-mprog').value='Ph.D.';document.getElementById('f-mstat').value='active';
   document.getElementById('f-gta').checked=false;document.getElementById('f-hrs').checked=false;
   document.getElementById('del-btn').style.display='none';document.getElementById('del-confirm').style.display='none';
@@ -529,6 +600,7 @@ function openEdit(i){
   editIdx=i;const s=students[i];
   document.getElementById('modal-title').textContent='Edit student';
   document.getElementById('f-name').value=s.name||'';
+  document.getElementById('f-netid').value=s.netID||'';
   document.getElementById('f-mprog').value=s.program||'Ph.D.';
   document.getElementById('f-cat').value=s.catalogYear||'';
   document.getElementById('f-madv').value=s.advisor||'';
@@ -550,7 +622,7 @@ function confirmDelete(){if(editIdx==null)return;students.splice(editIdx,1);clos
 function saveModal(){
   const prog=document.getElementById('f-mprog').value;
   const obj={
-    name:document.getElementById('f-name').value.trim(),program:prog,
+    name:document.getElementById('f-name').value.trim(),netID:document.getElementById('f-netid').value.trim(),program:prog,
     catalogYear:document.getElementById('f-cat').value.trim(),
     advisor:document.getElementById('f-madv').value.trim(),
     gradTerm:document.getElementById('f-grad').value.trim(),
@@ -880,10 +952,10 @@ function addGASemesterPrompt(){
 function exportXLSX(){
   if(typeof XLSX==='undefined'){toast('SheetJS not loaded');return;}
   const wb=XLSX.utils.book_new();
-  const hdr=['Name','Program','Catalog Year','Advisor','Grad Term','GTA','18hrs Done','Times Taught (auto)','Status','Ph.D. Prelim Exam','Ph.D. Dissertation Proposal','Ph.D. Dissertation Defense','M.S. Path'];
+  const hdr=['Name','NetID','Program','Catalog Year','Advisor','Grad Term','GTA','18hrs Done','Times Taught (auto)','Status','Ph.D. Prelim Exam','Ph.D. Dissertation Proposal','Ph.D. Dissertation Defense','M.S. Path'];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdr,...students.map(s=>{
     const ms=s.milestones||{};
-    return[s.name,s.program,s.catalogYear,s.advisor,s.gradTerm,
+    return[s.name,s.netID||'',s.program,s.catalogYear,s.advisor,s.gradTerm,
       s.gtaEligible?'Yes':'No',s.hrs18?'Yes':'No',taughtFor(s),s.status,
       ms['Preliminary Exam']?'Yes':'',ms['Dissertation Proposal']?'Yes':'',ms['Dissertation Defense']?'Yes':'',
       ms.msPath||''];
@@ -931,7 +1003,7 @@ function importXLSX(input){
         if(r[col('Ph.D. Dissertation Proposal')]==='Yes')ms['Dissertation Proposal']=true;
         if(r[col('Ph.D. Dissertation Defense')]==='Yes')ms['Dissertation Defense']=true;
         if(r[col('M.S. Path')])ms.msPath=r[col('M.S. Path')];
-        return{name:r[col('Name')]||'',program:r[col('Program')]||'Ph.D.',catalogYear:r[col('Catalog Year')]||'',
+        return{name:r[col('Name')]||'',netID:r[col('NetID')]||'',program:r[col('Program')]||'Ph.D.',catalogYear:r[col('Catalog Year')]||'',
           advisor:r[col('Advisor')]||'',gradTerm:r[col('Grad Term')]||'',
           gtaEligible:r[col('GTA')]==='Yes',hrs18:r[col('18hrs Done')]==='Yes',
           status:r[col('Status')]||'active',milestones:ms};
