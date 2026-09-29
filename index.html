@@ -55,6 +55,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
 .b-green{background:var(--green-light);color:var(--green)}
 .b-purple{background:var(--purple-light);color:var(--purple)}
 .b-coral{background:var(--coral-light);color:var(--coral)}
+.b-grant{background:var(--purple-light);color:var(--purple)}
 .btn{padding:7px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:var(--bg);color:var(--text);transition:all .15s}
 .btn:hover{background:var(--bg2)}
 .btn:active{transform:scale(.98)}
@@ -168,7 +169,7 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
       <select id="f-prog" onchange="page=0;render()"><option value="">All programs</option><option>Ph.D.</option><option>M.S.</option></select>
       <select id="f-status" onchange="page=0;render()"><option value="">All statuses</option><option value="active" selected>Active</option><option value="graduated">Graduated</option><option value="withdrew">Withdrew</option></select>
       <select id="f-adv" onchange="page=0;render()"><option value="">All advisors</option></select>
-      <select id="f-gta-filter" onchange="page=0;render()"><option value="">GTA: all</option><option value="yes">GTA</option><option value="no">Not GTA</option></select>
+      <select id="f-gta-filter" onchange="page=0;render()"><option value="">Assistantship: all</option><option value="gta">GTA</option><option value="grant">Grant</option><option value="no">No</option></select>
     </div>
     <div class="card">
       <div style="overflow-x:auto">
@@ -212,7 +213,6 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
       <div style="font-size:13px;color:var(--text2)">GTA teaching history — start typing a name to search</div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-sm" onclick="addCoursePrompt()">+ Course</button>
         <button class="btn btn-sm" onclick="addSemesterPrompt()">+ Semester</button>
       </div>
     </div>
@@ -251,9 +251,13 @@ td{padding:9px 12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;whi
     <!-- GTA checkbox lives right here in the main form area -->
     <div class="ms-section">
       <h4>Employment</h4>
-      <div class="ms-row">
-        <input type="checkbox" id="f-gta" style="accent-color:#1D9E75;width:16px;height:16px;cursor:pointer">
-        <label for="f-gta">GTA (has graduate assistantship)</label>
+      <div class="form-row" style="margin-bottom:0">
+        <label for="f-gta">Assistantship type</label>
+        <select id="f-gta">
+          <option value="no">No</option>
+          <option value="gta">GTA</option>
+          <option value="grant">Grant</option>
+        </select>
       </div>
     </div>
 
@@ -406,6 +410,8 @@ function migrateData(){
   // Fix student names
   students.forEach(s=>{
     if(NAME_MIGRATIONS[s.name]) s.name=NAME_MIGRATIONS[s.name];
+    if(!s.assistantshipType) s.assistantshipType=s.gtaEligible?'gta':'no';
+    s.gtaEligible=s.assistantshipType!=='no';
   });
   // Fix GTA history assignments
   gtaHistory.forEach(row=>{
@@ -448,10 +454,11 @@ function load(){
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',2400);}
 
-function activeGTAs(){return students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible);}
+function assistantshipType(s){return s.assistantshipType||(s.gtaEligible?'gta':'no');}
+function activeGTAs(){return students.filter(s=>(!s.status||s.status==='active')&&assistantshipType(s)!=='no');}
 function activeStudents(){return students.filter(s=>!s.status||s.status==='active');}
 function advisors(){return[...new Set(students.map(s=>s.advisor).filter(Boolean))].sort();}
-function isReady(s){return s.gtaEligible&&s.hrs18&&(!s.status||s.status==='active');}
+function isReady(s){return assistantshipType(s)==='gta'&&s.hrs18&&(!s.status||s.status==='active');}
 function taughtFor(s){
   const nm=s.name.trim().toLowerCase();let c=0;
   gtaHistory.forEach(r=>Object.values(r.assignments||{}).forEach(v=>{if(v&&v.trim().toLowerCase()===nm)c++;}));
@@ -482,7 +489,7 @@ function renderStats(){
   document.getElementById('st-active').textContent=act.length;
   document.getElementById('st-phd').textContent=act.filter(s=>s.program==='Ph.D.').length;
   document.getElementById('st-ms').textContent=act.filter(s=>s.program==='M.S.').length;
-  document.getElementById('st-gta').textContent=act.filter(s=>s.gtaEligible).length;
+  document.getElementById('st-gta').textContent=act.filter(s=>assistantshipType(s)==='gta').length;
   document.getElementById('st-ready').textContent=act.filter(isReady).length;
   const now=nowNum();
   document.getElementById('st-soon').textContent=act.filter(s=>{const y=termToNum(s.gradTerm);return y<9999&&y-now<=1&&y>=now;}).length;
@@ -519,8 +526,9 @@ function filtered(){
     if(prog&&s.program!==prog)return false;
     if(stat&&s.status!==stat)return false;
     if(adv&&s.advisor!==adv)return false;
-    if(gta==='yes'&&!s.gtaEligible)return false;
-    if(gta==='no'&&s.gtaEligible)return false;
+    if(gta==='gta'&&assistantshipType(s)!=='gta')return false;
+    if(gta==='grant'&&assistantshipType(s)!=='grant')return false;
+    if(gta==='no'&&assistantshipType(s)!=='no')return false;
     return true;
   }).sort((a,b)=>{const av=getSortVal(a,sortCol),bv=getSortVal(b,sortCol);return av<bv?-sortDir:av>bv?sortDir:0;});
 }
@@ -544,7 +552,7 @@ function render(){
       <td>${s.netID||'—'}</td>
       <td>${s.program==='Ph.D.'?'<span class="badge b-blue">Ph.D.</span>':'<span class="badge b-amber">M.S.</span>'}</td>
       <td>${s.catalogYear||'—'}</td><td>${s.advisor||'—'}</td><td>${s.gradTerm||'—'}</td>
-      <td>${s.gtaEligible?'<span class="badge b-teal">GTA</span>':'<span style="color:var(--text3);font-size:12px">—</span>'}</td>
+      <td>${assistantshipType(s)==='gta'?'<span class="badge b-teal">GTA</span>':assistantshipType(s)==='grant'?'<span class="badge b-grant">Grant</span>':'<span style="color:var(--text3);font-size:12px">—</span>'}</td>
       <td>${ck(s.hrs18)}</td><td style="text-align:center;font-weight:600">${t}</td>
       <td>${milestoneSummary(s)}</td>
       <td>${statusBadge(s)}</td></tr>`;
@@ -590,7 +598,7 @@ function openAdd(){
   editIdx=null;document.getElementById('modal-title').textContent='Add student';
   ['f-name','f-netid','f-cat','f-madv','f-grad'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-mprog').value='Ph.D.';document.getElementById('f-mstat').value='active';
-  document.getElementById('f-gta').checked=false;document.getElementById('f-hrs').checked=false;
+  document.getElementById('f-gta').value='no';document.getElementById('f-hrs').checked=false;
   document.getElementById('del-btn').style.display='none';document.getElementById('del-confirm').style.display='none';
   document.getElementById('save-btn').style.display='inline-block';
   document.getElementById('adv-list').innerHTML=advisors().map(a=>`<option>${a}</option>`).join('');
@@ -606,7 +614,7 @@ function openEdit(i){
   document.getElementById('f-madv').value=s.advisor||'';
   document.getElementById('f-grad').value=s.gradTerm||'';
   document.getElementById('f-mstat').value=s.status||'active';
-  document.getElementById('f-gta').checked=!!s.gtaEligible;
+  document.getElementById('f-gta').value=assistantshipType(s);
   document.getElementById('f-hrs').checked=!!s.hrs18;
   document.getElementById('del-btn').style.display='inline-block';
   document.getElementById('del-confirm').style.display='none';
@@ -627,7 +635,8 @@ function saveModal(){
     advisor:document.getElementById('f-madv').value.trim(),
     gradTerm:document.getElementById('f-grad').value.trim(),
     status:document.getElementById('f-mstat').value,
-    gtaEligible:document.getElementById('f-gta').checked,
+    assistantshipType:document.getElementById('f-gta').value,
+    gtaEligible:document.getElementById('f-gta').value!=='no',
     hrs18:document.getElementById('f-hrs').checked,
     milestones:readMilestones(prog),
   };
@@ -738,11 +747,11 @@ function renderGTAHistory(){
   const semSel=document.getElementById('rot-sem');const curSem=semSel.value;
   semSel.innerHTML='<option value="">— select —</option>'+FUTURE_SEMS.map(s=>`<option${s===curSem?' selected':''}>${s}</option>`).join('');
 
-  document.getElementById('gta-head').innerHTML='<tr><th style="min-width:90px">Semester</th>'+gtaCourses.map(c=>`<th style="min-width:130px;text-align:center">${c}</th>`).join('')+'</tr>';
+  document.getElementById('gta-head').innerHTML='<tr><th style="min-width:125px">Semester</th>'+gtaCourses.map((c,ci)=>`<th style="min-width:145px;text-align:center"><div style="display:flex;align-items:center;gap:4px;justify-content:center"><input value="${escAttr(c)}" title="Edit course code" onchange="renameGTACourse(${ci},this.value)" style="width:105px;text-align:center;font-weight:700;border:1px solid transparent;background:transparent;padding:5px 4px;border-radius:6px" onfocus="this.style.borderColor='var(--border)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"><button class="btn btn-sm" title="Delete ${escAttr(c)}" onclick="deleteGTACourse(${ci})" style="padding:2px 6px;line-height:1.2">×</button></div></th>`).join('')+'<th style="min-width:90px;text-align:center"><button class="btn btn-sm" onclick="addCoursePrompt()">+ Course</button></th></tr>';
   document.getElementById('gta-body').innerHTML=gtaHistory.map((row,ri)=>{
-    let tr=`<tr><td style="font-weight:600;white-space:nowrap">${row.semester}</td>`;
+    let tr=`<tr><td style="padding:4px 6px"><input value="${escAttr(row.semester)}" title="Edit semester" onchange="renameGTASemester(${ri},this.value)" style="width:110px;font-weight:600;border:1px solid transparent;background:transparent;padding:6px;border-radius:6px" onfocus="this.style.borderColor='var(--border)';this.style.background='white'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"></td>`;
     gtaCourses.forEach(c=>{tr+=`<td style="padding:4px 6px">${makeACInput(ri,c,row.assignments[c]||'')}</td>`;});
-    return tr+'</tr>';
+    return tr+'<td></td></tr>';
   }).join('');
 }
 
@@ -757,10 +766,45 @@ function addCoursePrompt(){
   const t=n.trim();if(!gtaCourses.includes(t)){gtaCourses.push(t);save();renderGTAHistory();}
 }
 
+function renameGTACourse(ci,newName){
+  const oldName=gtaCourses[ci];
+  const t=(newName||'').trim();
+  if(!t){toast('Course code cannot be blank');renderGTAHistory();return;}
+  if(t!==oldName&&gtaCourses.includes(t)){toast('That course already exists');renderGTAHistory();return;}
+  if(t===oldName)return;
+  gtaCourses[ci]=t;
+  gtaHistory.forEach(r=>{
+    if(!r.assignments)r.assignments={};
+    if(Object.prototype.hasOwnProperty.call(r.assignments,oldName)){
+      r.assignments[t]=r.assignments[oldName];
+      delete r.assignments[oldName];
+    }
+  });
+  save();renderGTAHistory();toast('Course renamed to '+t);
+}
+
+function deleteGTACourse(ci){
+  const course=gtaCourses[ci];if(!course)return;
+  if(!confirm('Delete '+course+' from GTA teaching history? This will remove its assignments from every semester.'))return;
+  gtaCourses.splice(ci,1);
+  gtaHistory.forEach(r=>{if(r.assignments)delete r.assignments[course];});
+  save();renderGTAHistory();toast('Deleted course: '+course);
+}
+
+function renameGTASemester(ri,newName){
+  const row=gtaHistory[ri];if(!row)return;
+  const oldName=row.semester;const t=(newName||'').trim();
+  if(!t){toast('Semester cannot be blank');renderGTAHistory();return;}
+  if(t!==oldName&&gtaHistory.some((r,i)=>i!==ri&&r.semester===t)){toast('That semester already exists');renderGTAHistory();return;}
+  if(t===oldName)return;
+  row.semester=t;
+  save();renderGTAHistory();populateGASemSel();toast('Semester renamed to '+t);
+}
+
 function runSuggestion(){
   const sem=document.getElementById('rot-sem').value;
   const out=document.getElementById('suggestion-output');
-  const pool=students.filter(s=>(!s.status||s.status==='active')&&s.gtaEligible&&s.hrs18);
+  const pool=students.filter(s=>(!s.status||s.status==='active')&&assistantshipType(s)==='gta'&&s.hrs18);
   if(!pool.length){out.innerHTML='<p style="font-size:13px;color:var(--text2);padding:8px 0">No students currently meet GTA + 18hr criteria.</p>';return;}
   if(!sem){out.innerHTML='<p style="font-size:13px;color:var(--text2);padding:8px 0">Please select a semester first.</p>';return;}
   const wc=pool.map(s=>({s,t:taughtFor(s)})).sort((a,b)=>a.t-b.t);
@@ -956,7 +1000,7 @@ function exportXLSX(){
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hdr,...students.map(s=>{
     const ms=s.milestones||{};
     return[s.name,s.netID||'',s.program,s.catalogYear,s.advisor,s.gradTerm,
-      s.gtaEligible?'Yes':'No',s.hrs18?'Yes':'No',taughtFor(s),s.status,
+      assistantshipType(s)==='gta'?'GTA':assistantshipType(s)==='grant'?'Grant':'No',s.hrs18?'Yes':'No',taughtFor(s),s.status,
       ms['Preliminary Exam']?'Yes':'',ms['Dissertation Proposal']?'Yes':'',ms['Dissertation Defense']?'Yes':'',
       ms.msPath||''];
   })]),'Students');
@@ -1005,7 +1049,8 @@ function importXLSX(input){
         if(r[col('M.S. Path')])ms.msPath=r[col('M.S. Path')];
         return{name:r[col('Name')]||'',netID:r[col('NetID')]||'',program:r[col('Program')]||'Ph.D.',catalogYear:r[col('Catalog Year')]||'',
           advisor:r[col('Advisor')]||'',gradTerm:r[col('Grad Term')]||'',
-          gtaEligible:r[col('GTA')]==='Yes',hrs18:r[col('18hrs Done')]==='Yes',
+          assistantshipType:(()=>{const v=(r[col('GTA')]||'').toString().toLowerCase();return v==='grant'?'grant':(v==='gta'||v==='yes')?'gta':'no';})(),
+          gtaEligible:['gta','grant','yes'].includes((r[col('GTA')]||'').toString().toLowerCase()),hrs18:r[col('18hrs Done')]==='Yes',
           status:r[col('Status')]||'active',milestones:ms};
       });
       const gtaWs=wb.Sheets['GTA History'];
